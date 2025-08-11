@@ -30,7 +30,7 @@ function Input({
         placeholder={Label}
         value={Value}
         ref={inputRef}
-        className="peer border rounded-xl w-full outline-none focus:ring-2 focus:ring-cyan-400 placeholder-transparent text-base sm:text-lg h-12 sm:h-14 px-3 py-2 transition"
+        className="peer border rounded-xl w-full z-0 outline-none focus:ring-2 focus:ring-cyan-400 placeholder-transparent text-base sm:text-lg h-12 sm:h-14 px-3 py-2 transition"
         onChange={(e) => {
           const inputValue = e.target.value;
           const { isValid, errorMessage } = validate(inputValue);
@@ -46,7 +46,7 @@ function Input({
         htmlFor={Id}
         className="absolute -top-3 left-3 bg-white px-1 text-gray-500 transition-all duration-200 cursor-text
           peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
-          peer-focus:-top-3 peer-focus:text-sm peer-focus:text-gray-600"
+          peer-focus:-top-3 peer-focus:z-5 peer-focus:text-sm peer-focus:text-gray-600"
         onClick={() => inputRef.current.focus()}
       >
         {Label}
