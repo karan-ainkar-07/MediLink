@@ -1,1 +1,1 @@
-console.log("hello");
+import {app} from './app.js'
