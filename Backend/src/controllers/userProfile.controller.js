@@ -1,7 +1,5 @@
 //Add, View, Edit Health Details
 
-//See E-Prescriptions and Invoice 
+//See E-Prescriptions and Invoice (history of booking details)
 
-//Book Doctor
-
-//Queue Management
+//Book Doctor (coupon management)

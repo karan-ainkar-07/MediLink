@@ -1,4 +1,4 @@
-import { loginUser, logOut, refreshAccessToken, registerUser, resetPassword } from "../controllers/user.controller.js";
+import {  registerUser,loginUser,logOut,refreshAccessToken,resetPassword,} from '../controllers/doctor.controller.js'
 import {Router} from "express"
 import VerifyJWT from "../middleware/verifyJWT.js";
 

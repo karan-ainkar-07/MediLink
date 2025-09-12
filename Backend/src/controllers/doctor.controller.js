@@ -4,20 +4,11 @@ import { User} from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 
-const generateAccessAndRefreshTokens = async(user) => {
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
-
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    return { accessToken, refreshToken };
-}
 
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password}=req.body;
+    const {email,mobileNo,password,experience,education,specialization}=req.body;
 
     //validate details check if empty
     if (
@@ -26,26 +17,33 @@ const registerUser=asyncHandler( async(req,res)=>{
         throw new ApiError(400, "All fields are required")
     }
 
+    if(education.length()==0)
+    {
+        throw new ApiError(400,"Education cannot be empty");
+    }
+
     //check if user exists 
-    const existedUser = await User.findOne({
+    const existedUser = await Doctor.findOne({
         $or: [{ mobileNo }, { email }]
     })
 
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
-
     //if not create a new user object 
-    const user=await User.create(
+    const user=await Doctor.create(
         {
             email,
             mobileNo,
             password,
+            experience,
+            education,
+            specialization,
         }
     )
 
     //remove password and refresh token from the res
-    const createdUser = await User.findById(user._id).select(
+    const createdUser = await Doctor.findById(user._id).select(
         "-password -refreshToken"
     )
 
@@ -72,7 +70,7 @@ const loginUser=asyncHandler(async(req,res)=>{
     }
 
     //check if User exist
-    const user=await User.findOne({
+    const user=await Doctor.findOne({
         $or: [{mobileNo},{email}]
     })
 
@@ -115,7 +113,7 @@ const loginUser=asyncHandler(async(req,res)=>{
 const logOut=asyncHandler(async(req,res)=>{
 
     //get the current user and check if he is logged in 
-    await User.findByIdAndUpdate(req.user._id,
+    await Doctor.findByIdAndUpdate(req.user._id,
     {
         $set:
         {
@@ -154,7 +152,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         process.env.REFRESH_TOKEN_SECRET
     )
 
-    const user = await User.findById(decodedToken?._id)
+    const user = await Doctor.findById(decodedToken?._id)
 
     if (!user) {
         throw new ApiError(401, "Invalid refresh token")
@@ -189,7 +187,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
     // get the entered old and new password 
     const { oldPassword, newPassword } = req.body;  
-    const user = await User.findById(req.user._id);
+    const user = await Doctor.findById(req.user._id);
 
     if (!user) {
         throw new ApiError(404, "User not found");
@@ -215,12 +213,10 @@ const resetPassword = asyncHandler(async (req, res) => {
     });
 });
 
-
 export {
     registerUser,
     loginUser,
     logOut,
     refreshAccessToken,
     resetPassword,
-};
-
+}

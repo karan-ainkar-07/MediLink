@@ -17,7 +17,9 @@ app.use(cookieParser())
 
 // Routing 
 import userRouter from "./routes/userRoute"
+import doctorRouter from "./routes/doctorRoute"
 
 app.use('/user',userRouter);
+app.use('/doctor',doctorRouter);
 
 export { app }
