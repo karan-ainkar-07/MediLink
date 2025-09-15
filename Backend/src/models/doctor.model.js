@@ -49,6 +49,10 @@ const doctorSchema = new Schema(
             enum:["Cardiologist","Dermatology", "Neurology", "Orthopedics", "Pediatrics","General Practitioner"],
             required:true,
             default:["General Practitioner"]
+        },
+        profileImage:{
+            type:String,
+            required:true,
         }
     },
     {

@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
-import { User} from "../models/user.model.js"
+import { Doctor } from "../models/doctor.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 
@@ -8,11 +8,11 @@ import jwt from "jsonwebtoken"
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password,experience,education,specialization}=req.body;
+    const {email,mobileNo,password,experience,education,specialization,localFilePath}=req.body;
 
     //validate details check if empty
     if (
-        [ email, mobileNo, password].some((field) => field?.trim() === "")
+        [ email, mobileNo, password,localFilePath].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
@@ -30,6 +30,9 @@ const registerUser=asyncHandler( async(req,res)=>{
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
+
+    //Upload localFile on cloudinary using multer and get the Address of stored Image
+
     //if not create a new user object 
     const user=await Doctor.create(
         {
@@ -39,6 +42,7 @@ const registerUser=asyncHandler( async(req,res)=>{
             experience,
             education,
             specialization,
+            profileImage
         }
     )
 

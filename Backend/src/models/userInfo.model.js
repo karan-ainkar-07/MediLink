@@ -55,3 +55,5 @@ const userInfoSchema= new Schema(
 
     }
 )
+
+export const UserInfo= mongoose.model("UserInfo",userInfoSchema);

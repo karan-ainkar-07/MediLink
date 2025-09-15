@@ -1,6 +1,6 @@
 import { useState } from "react";
-import SignUpOverlay from "../components/SignUpOverlay";
 import { Search } from "lucide-react";
+import AuthUI from "../components/Auth";
 
 function LandingPage()
 {
@@ -20,10 +20,10 @@ function LandingPage()
                     </button>
                 </div>
                 <div className="grid grid-cols-2  text-xl font-semibold ">
-                    <button>
+                    <button onClick={()=>setIsSignUpActive(true)}>
                         SignUp
                     </button>
-                    <button>
+                    <button onClick={()=>setIsSignUpActive(true)}>
                         Login
                     </button>
                 </div>
@@ -37,9 +37,9 @@ function LandingPage()
             </div>
 
             {/* Overlay */}
-            <div>
+            <div className="flex justify-center items-center">
                 {isSignUpActive && (
-                    <SignUpOverlay/>
+                  <AuthUI onClose={()=>setIsSignUpActive(false)}/>
                 )}
             </div>
 
