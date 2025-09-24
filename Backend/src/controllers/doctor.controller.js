@@ -1,8 +1,9 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
 import { Doctor } from "../models/doctor.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 
 const registerUser=asyncHandler( async(req,res)=>{
@@ -32,6 +33,9 @@ const registerUser=asyncHandler( async(req,res)=>{
     }
 
     //Upload localFile on cloudinary using multer and get the Address of stored Image
+    const localProfileImage=req.file;
+    
+    const profileImage= await uploadOnCloudinary(localProfileImage?.path);
 
     //if not create a new user object 
     const user=await Doctor.create(
@@ -42,7 +46,7 @@ const registerUser=asyncHandler( async(req,res)=>{
             experience,
             education,
             specialization,
-            profileImage
+            profileImage:(profileImage || ""),
         }
     )
 
@@ -211,10 +215,9 @@ const resetPassword = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save();   // pre-save hook will hash it
 
-    return res.status(200).json({
-        success: true,
-        message: "Password updated successfully"
-    });
+    return res
+        .status(200)
+        .json(new ApiResponse(200,"Password changes successfully"));
 });
 
 export {

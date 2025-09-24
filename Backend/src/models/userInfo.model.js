@@ -30,10 +30,6 @@ const userInfoSchema= new Schema(
             }
         },
         
-        ProfileImage:{
-            type:String,
-            required:false,
-        },
 
         Vitals:{
             height:

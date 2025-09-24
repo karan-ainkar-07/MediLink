@@ -46,9 +46,14 @@ const doctorSchema = new Schema(
         },
         specialization:{
             type:[String],
-            enum:["Cardiologist","Dermatology", "Neurology", "Orthopedics", "Pediatrics","General Practitioner"],
+            enum:["Dentist","Dermatology", "Pediatrics","General Practitioner"],
             required:true,
             default:["General Practitioner"]
+        },
+        totalBookings:{
+            type:Number,
+            default:1000,
+            required:false,
         },
         profileImage:{
             type:String,

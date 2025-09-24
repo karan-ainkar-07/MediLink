@@ -5,7 +5,7 @@ const invoiceSchema = new Schema(
         hospital:
         {
             type:mongoose.Schema.Types.ObjectId,
-            ref:"Hospital",
+            ref:"Clinic",
         },
         patient:
         {
@@ -45,3 +45,5 @@ const invoiceSchema = new Schema(
         timestamps:true,
     }
 )
+
+export const Invoice=mongoose.model("Invoice",invoiceSchema);

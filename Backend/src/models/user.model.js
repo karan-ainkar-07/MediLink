@@ -32,6 +32,11 @@ const userSchema = new Schema(
             type:Boolean,
             default:false,
         },
+        userProfile:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"UserInfo",
+            required:false,
+        }
     },
     {
         timestamps:true,
