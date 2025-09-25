@@ -14,13 +14,14 @@ const prescriptionSchema = new Schema(
                 name: { type: String, required: true },         
                 dosage: { type: String, required: true },       
                 frequency: { type: String, required: true },    
-                duration: { type: String, required: true },     
+                duration: { type: Number, required: true },     
                 instructions: { type: String }                  
               }
             ],
             isNotificationsOn:
             {
                 type:Boolean,
+                default:false,
             },
             startDate:
             {

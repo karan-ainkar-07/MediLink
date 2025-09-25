@@ -30,6 +30,11 @@ const CouponSchema=new Schema(
         usedAt:
         {
             type:Date,
+        },
+        partOfQueue:
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            required:true,
         }
     },
     {

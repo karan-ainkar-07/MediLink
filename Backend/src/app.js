@@ -17,6 +17,9 @@ app.use(express.json({limit: "16kb"}))
 app.use(express.urlencoded({extended: true, limit: "16kb"}))
 app.use(express.static("public"))
 app.use(cookieParser())
+
+console.log(process.env.MONGODB_URI)
+
 await connectDB();
 
 // Routing 

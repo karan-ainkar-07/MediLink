@@ -1,8 +1,7 @@
-import asyncHandler from "../utils/AsyncHandler.js";
-import { Clinic } from "../models/Clinic.js";
-import ApiError from "../utils/ApiError.js";
-import ApiResponse from "../utils/ApiResponse.js";
-import { generateAccessToken } from "../utils/jwt.js"; 
+import {asyncHandler} from "../utils/AsyncHandler.js";
+import { Clinic } from "../models/Clinic.model.js";
+import {ApiError} from "../utils/ApiError.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
 
 const loginClinic = asyncHandler(async (req, res) => {
     // Get data from frontend
@@ -26,7 +25,7 @@ const loginClinic = asyncHandler(async (req, res) => {
     }
 
     // Generate access token
-    const accessToken = generateAccessToken(clinic._id); 
+    const accessToken = Clinic.generateAccessToken(clinic._id); 
     clinic.password = undefined; 
 
     const options = {
@@ -48,7 +47,6 @@ const loginClinic = asyncHandler(async (req, res) => {
             )
         );
 });
-
 
 const registerClinic = asyncHandler(async (req, res) => {
     // Get clinic details from request

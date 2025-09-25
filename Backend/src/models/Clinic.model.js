@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import mongoose,{Schema} from "mongoose";
 
-const timingSchema = new mongoose.Schema({
+const timingSchema = new Schema({
   week: {
     type: String,
     enum: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"],

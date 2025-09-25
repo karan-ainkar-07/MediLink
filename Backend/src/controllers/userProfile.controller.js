@@ -1,4 +1,5 @@
 import { UserInfo } from "../models/userInfo.model.js";
+import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
 import {Clinic} from "../models/Clinic.model.js"
 import { Coupon } from "../models/coupon.model.js";
@@ -9,9 +10,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 //Add, View, Edit Health Details
 
-
 //See E-Prescriptions and Invoice (history of booking details)
-
 
 //Book Doctor (coupon management)
 
@@ -43,10 +42,12 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     
         //get the doctors based on the filters
         const filter = {};
-        if (specialization) filter.specialization = specialization;
-        if (clinicIds.length > 0) filter.clinic = { $in: clinicIds };
-    
+        if (specialization) 
+            filter.specialization = specialization;
 
+        if (clinicIds.length > 0) 
+            filter.clinic = { $in: clinicIds };
+    
         const doctors = await Doctor.find(filter)
           .populate("clinic", "name address location")
           .skip(skip)
@@ -113,13 +114,19 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       endOfDay.setHours(23, 59, 59, 999);
     
       // Find the latest coupon for this doctor+clinic for today
+      const appointmentsToday = await Appointment.find({
+        doctor: mongoose.Types.ObjectId(doctorId),
+        clinic: mongoose.Types.ObjectId(clinicId),
+        date: { $gte: startOfDay, $lte: endOfDay }
+      }).select("_id");
+
+      const appointmentIds = appointmentsToday.map(a => a._id);
+      
       const lastCoupon = await Coupon.findOne({
-        "appointment.doctor": mongoose.Types.ObjectId(doctorId),
-        "appointment.hospital": mongoose.Types.ObjectId(clinicId),
-        issuedAt: { $gte: startOfDay, $lte: endOfDay }
+        appointment: { $in: appointmentIds },
       }).sort({ issuedAt: -1 });
     
-      return lastCoupon ? lastCoupon.number + 1 : 1; // start from 1 if no coupon today
+      return lastCoupon ? lastCoupon.couponNumber + 1 : 1; 
     };
 
     const BookAppointment = asyncHandler(async (req, res) => {
@@ -144,14 +151,44 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       });
   
   
-      const number=generateNextCouponNumber(doctorId,clinicId);
+      const nextNumber=await generateNextCouponNumber(doctorId,clinicId);
+
+      //create a new queue if it is the first coupon
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999); 
+
+        let queue = await Queue.findOne({
+          Doctor: doctorId,
+          Clinic: clinicId,
+          date: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+
+      if(!queue)
+      {
+        queue=await Queue.create(
+          {
+            Doctor:doctorId,
+            Clinic:clinicId,
+            Status:"Stopped",
+            date:new Date()
+          }
+        )
+      }
+
+
       //Create the coupon
       const coupon = await Coupon.create({
         appointment: appointment._id,
         issuedAt: new Date(),
         Status: "Active",
-        couponNumber: nextNumber
+        couponNumber: nextNumber,
+        partOfQueue:queue._id,
       });
+
   
       res
         .status(201)
