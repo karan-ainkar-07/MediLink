@@ -1,18 +1,22 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
-import { User} from "../models/user.model.js"
+import { Doctor } from "../models/doctor.model.js";
+import {Queue} from "../models/queue.model.js"
+import {Prescription} from "../models/prescription.model.js"
+import { Coupon } from "../models/coupon.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password,experience,education,specialization}=req.body;
+    const {email,mobileNo,password,experience,education,specialization,localFilePath}=req.body;
 
     //validate details check if empty
     if (
-        [ email, mobileNo, password].some((field) => field?.trim() === "")
+        [ email, mobileNo, password,localFilePath].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
@@ -30,6 +34,12 @@ const registerUser=asyncHandler( async(req,res)=>{
     if (existedUser) {
         throw new ApiError(409, "User with email or username already exists")
     }
+
+    //Upload localFile on cloudinary using multer and get the Address of stored Image
+    const localProfileImage=req.file;
+    
+    const profileImage= await uploadOnCloudinary(localProfileImage?.path);
+
     //if not create a new user object 
     const user=await Doctor.create(
         {
@@ -39,6 +49,7 @@ const registerUser=asyncHandler( async(req,res)=>{
             experience,
             education,
             specialization,
+            profileImage:(profileImage || ""),
         }
     )
 
@@ -207,11 +218,140 @@ const resetPassword = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save();   // pre-save hook will hash it
 
-    return res.status(200).json({
-        success: true,
-        message: "Password updated successfully"
-    });
+    return res
+        .status(200)
+        .json(new ApiResponse(200,"Password changes successfully"));
 });
+
+const pauseQueue = asyncHandler(async (req, res) => {
+    const { Doctor } = req.query;
+
+    const QueueDoc = await Queue.findOneAndUpdate(
+        { Doctor },
+        { $set: { status: "Stopped" } },
+        { new: true }
+    );
+
+    if (!QueueDoc) {
+        throw new ApiError(400, "Queue doesn't exist");
+    }
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            QueueDoc,
+            "Queue paused successfully",
+        )
+
+    );
+});
+
+const resumeQueue = asyncHandler(async (req, res) => {
+    const { Doctor } = req.query;
+
+    const QueueDoc = await Queue.findOneAndUpdate(
+        { Doctor },
+        { $set: { status: "In-Progress" } },
+        { new: true }
+    );
+
+    if (!QueueDoc) {
+        throw new ApiError(400, "Queue doesn't exist");
+    }
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            QueueDoc,
+            "Queue Resumed successfully",
+        )
+
+    );
+});
+
+const nextCoupon = asyncHandler(async (req, res) => {
+    // 1. Get the latest coupon
+    const {Doctor,Patient}= req.query;
+
+    const latestCoupon = await Coupon.findOne({Status:"Active"}).sort({ createdAt: -1 });
+
+    if (!latestCoupon) {
+        throw new ApiError(404, "No active coupons found");
+    }
+
+    latestCoupon.Status="Used";
+
+    // 2. Get the latest active appointment for this coupon (or doctor)
+    const latestAppointment = await Appointment.findOne({
+        Doctor,
+        Patient,
+        Status: "Booked"
+    }).sort({ createdAt: -1 });
+
+    if (!latestAppointment) {
+        throw new ApiError(404, "No active appointments found for this coupon");
+    }
+
+    // 3. Update appointment status
+    latestAppointment.status = "completed";
+    latestAppointment.used = true;
+    const isSaved=await latestAppointment.save();
+    
+    if(isSaved)
+        await latestCoupon.save();
+
+    // 4. Send response
+    res.status(200).json(
+        new ApiResponse(200,
+            {
+                latestCoupon,
+                latestAppointment
+            },
+            "queue moved infront"
+        )
+    );
+});
+
+const saveAndSendPrescription = asyncHandler(async(req,res)=>
+{
+    //get the patient and user from the req.query
+    const {patient,Doctor} = req.query;
+
+    //get the Prescription form the body
+    const {diagnoses,medicines,notes}=req.body;
+
+    if(!diagnoses || !diagnoses[0] || !medicines || !medicines[0])
+    {
+        throw new ApiError(
+            402,"Missing diagnosis and medicines"
+        )
+    }
+
+    const duration = medicines.map((medicine) => medicine.duration); 
+    const maxDuration = Math.max(...duration); 
+    const endDate = new Date(Date.now() + maxDuration * 24 * 60 * 60 * 1000);
+
+    //save the prescription
+    const prescription=await Prescription.create(
+        {
+            notes:(notes? notes: ""),
+            diagnoses,
+            medicines,
+            endDate,
+            startDate :new Date(Date.now()),
+        }
+    )
+
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                prescription,
+                "Prescription created successfully"
+            )
+        )
+})
 
 export {
     registerUser,
@@ -219,4 +359,8 @@ export {
     logOut,
     refreshAccessToken,
     resetPassword,
+    pauseQueue,
+    resumeQueue,
+    nextCoupon,
+    saveAndSendPrescription,
 }

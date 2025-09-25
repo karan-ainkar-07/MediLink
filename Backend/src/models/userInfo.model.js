@@ -30,10 +30,6 @@ const userInfoSchema= new Schema(
             }
         },
         
-        ProfileImage:{
-            type:String,
-            required:false,
-        },
 
         Vitals:{
             height:
@@ -55,3 +51,5 @@ const userInfoSchema= new Schema(
 
     }
 )
+
+export const UserInfo= mongoose.model("UserInfo",userInfoSchema);
