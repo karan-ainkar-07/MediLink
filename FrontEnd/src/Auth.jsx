@@ -19,12 +19,12 @@ export default function AuthUI({ isSignUpActive, onClose }) {
     }
     setLoading(true);
     try {
-      const response = await axios.post("/user/login", { email, password }, { withCredentials: true });
+      const response = await axios.post("http://localhost:5000/user/login", { email, password }, { withCredentials: true });
       const { accessToken, refreshToken, User } = response.data.data;
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("user", JSON.stringify(User));
       setLoading(false);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       setLoading(false);
       setError(err.response?.data?.message || "Login failed");
@@ -34,7 +34,7 @@ export default function AuthUI({ isSignUpActive, onClose }) {
   return (
     <div className={`${styles.container} ${isSignUpActive ? styles.rightPanelActive : ""}`}>
       <div className={`${styles.formContainer} ${styles.signInContainer}`}>
-        <form className={styles.authForm} onSubmit={handleSignIn}>
+        <form className={styles.authForm} >
           <h1>Sign In</h1>
           <input
             className={styles.authInput}
@@ -51,8 +51,10 @@ export default function AuthUI({ isSignUpActive, onClose }) {
             onChange={(e) => setPassword(e.target.value)}
           />
           {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
-          <button className={styles.authButton} type="submit" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
+          <button className={styles.authButton} type="submit" disabled={loading}
+            onClick={handleSignIn}
+              >
+            {loading ? "Signing In..." : "Sign In"} 
           </button>
         </form>
       </div>

@@ -1,1 +1,1 @@
-export const DB_NAME="MediLink";
+export const DB_NAME="MediLink1";

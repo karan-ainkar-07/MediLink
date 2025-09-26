@@ -1,6 +1,4 @@
 import {Router} from "express"
-import VerifyJWT from "../middleware/verifyJWT.js";
-import {upload} from "../middleware/multer.js"
 import { BookAppointment, getCouponStats, getDoctor, getDoctors } from "../controllers/userProfile.controller.js";
 
 const router=Router();

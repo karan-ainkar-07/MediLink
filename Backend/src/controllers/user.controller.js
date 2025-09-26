@@ -60,56 +60,49 @@ const registerUser=asyncHandler( async(req,res)=>{
     )
 })
 
-const loginUser=asyncHandler(async(req,res)=>{
+const loginUser = asyncHandler(async (req, res) => {
+    // get data from frontend
+    const { email, password } = req.body;
 
-    //get data from frontend
-    const {email,mobileNo,password}=req.body;
-
-    //validate if empty
-    if(!email && !mobileNo)
-    {
-        throw new ApiError(400,"email or mobile number is required");
+    // validate inputs
+    if (!email || !password) {
+        throw new ApiError(400, "Email and password are required");
     }
 
-    //check if User exist
-    const user=await User.findOne({
-        $or: [{mobileNo},{email}]
-    })
-
-    if(!user)
-    {
-        throw new ApiError(400,"User don't exist");
+    // check if User exists
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new ApiError(404, "User not found");
     }
 
-    //check if password is correct
-    if(!(await user.isPasswordCorrect(password)))
-    {
-        throw new ApiError(401,"Incorrect Password")
+    // check if password is correct
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Incorrect password");
     }
 
-    //Generate access and refresh token (store refresh token in DB)
-    const {refreshToken,accessToken}=await generateAccessAndRefreshTokens(user);
-    user.password=undefined;
+    // generate access and refresh tokens
+    const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(user);
+    user.password = undefined; // remove password from response
 
-    const options={
+    const options = {
         httpOnly: true,
-    }
+        secure: true, // add this if you are using HTTPS
+    };
 
     return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-        new ApiResponse(
-            200,                             
-            {
-                User: user, accessToken, refreshToken
-            },
-            "User logged In Successfully"
-        )
-    )
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                { user, accessToken, refreshToken },
+                "User logged in successfully"
+            )
+        );
+});
 
-})
 
 const logOut=asyncHandler(async(req,res)=>{
 

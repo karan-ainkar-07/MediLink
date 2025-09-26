@@ -2,14 +2,12 @@ import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import connectDB from './config/DB.js'
-import dotenv from "dotenv";
 
-dotenv.config();
 
 const app = express()
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin:"http://localhost:3000",
     credentials: true
 }))
 
@@ -26,7 +24,7 @@ await connectDB();
 import userRouter from "./routes/userRoute.js"
 import doctorRouter from "./routes/doctorRoute.js"
 import clinicRouter from "./routes/clinicRoute.js"
-import userProfileRouter from "./routes/userProfile"
+import userProfileRouter from "./routes/userProfileRoute.js"
 
 app.use('/clinic',clinicRouter)
 app.use('/user',userRouter);

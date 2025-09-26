@@ -10,8 +10,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/sign-up" element={<Auth/> } />
+        <Route path="/" element={<Auth/> } />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/symptom" element={<SymptomsChecker />} />
         <Route path="/BookingPanel" element={<BookingPanel />} />
