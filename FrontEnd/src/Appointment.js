@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import "./Appointment.css";
 import { useNavigate } from "react-router-dom";
 
@@ -8,22 +8,39 @@ export default function Appointment() {
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
   const [results, setResults] = useState([]);
-  const [doctors,setDoctors] =useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(()=>
-    {
-      const doctor=fetch()
-    },[speciality,date,location])
+  const handleSearch = async () => {
+    setLoading(true);
+    setError("");
 
-  const handleSearch = () => {
-    const filtered = doctors.filter(
-      (doc) =>
-        (speciality
-          ? doc.speciality.toLowerCase() === speciality.toLowerCase()
-          : true) &&
-        (location ? doc.location.toLowerCase() === location.toLowerCase() : true)
-    );
-    setResults(filtered);
+    try {
+      const queryParams = new URLSearchParams();
+      if (speciality) queryParams.append("specialization", speciality);
+      if (location) queryParams.append("city", location);
+
+      const res = await fetch(
+        `http://localhost:5000/userProfile/get-doctor?${queryParams.toString()}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch doctors");
+
+      setResults(data.data); 
+    } catch (err) {
+      setError(err.message);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,30 +80,42 @@ export default function Appointment() {
         </button>
       </div>
 
+      {loading && <p>Loading doctors...</p>}
+      {error && <p className="error">{error}</p>}
+
       <div className="doctor-results">
         {results.length > 0 ? (
           results.map((doc) => (
-            <div key={doc.id} className="doctor-card">
+            <div key={doc._id} className="doctor-card">
               <div className="doctor-image">
-                <img src={doc.image} alt={doc.name} />
+                <img src={doc.profileImage || "/default-avatar.png"} alt={doc.email} />
               </div>
 
               <div className="doctor-info">
-                <h3 className="doctor-header">{doc.name}</h3>
+                <h3 className="doctor-header">{doc.email}</h3>
                 <p>
-                  <strong>Speciality:</strong> {doc.speciality}
+                  <strong>Speciality:</strong> {doc.specialization}
                 </p>
                 <p>
                   <strong>Experience:</strong> {doc.experience} years
                 </p>
                 <p>
-                  <strong>Qualification:</strong> {doc.qualification}
+                  <strong>Qualification:</strong> {doc.education.join(", ")}
                 </p>
               </div>
 
               <div className="doctor-footer">
-                <span className="doctor-fees">₹{doc.fees}</span>
-                <button className="btn-view" onClick={() => navigate("/BookingPanel")}>View</button>
+                <button className="btn-view" onClick={() => 
+                  {
+                    const doctorId=doc._id;
+                    const clinicId=doc.clinic;
+                    navigate("/BookingPanel",{state:{
+                      doctorId,
+                      clinicId,
+                      }})}
+                }>  
+                  View
+                </button>
               </div>
             </div>
           ))

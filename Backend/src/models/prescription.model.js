@@ -2,6 +2,11 @@ import mongoose, { mongo, Schema } from "mongoose";
 
 const prescriptionSchema = new Schema(
     {
+            appointment:
+            {
+              type:mongoose.Schema.Types.ObjectId,
+              ref:"Appointment",
+            },
             notes: { type: String },
             diagnoses: [
               {

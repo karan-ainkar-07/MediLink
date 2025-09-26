@@ -26,9 +26,11 @@ await connectDB();
 import userRouter from "./routes/userRoute.js"
 import doctorRouter from "./routes/doctorRoute.js"
 import clinicRouter from "./routes/clinicRoute.js"
+import userProfileRouter from "./routes/userProfile"
 
 app.use('/clinic',clinicRouter)
 app.use('/user',userRouter);
 app.use('/doctor',doctorRouter);
+app.use('/userProfile',userProfileRouter)
 
 export { app }

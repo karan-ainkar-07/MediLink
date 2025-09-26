@@ -50,14 +50,19 @@ const doctorSchema = new Schema(
             required:true,
             default:["General Practitioner"]
         },
-        totalBookings:{
+        rate:{
             type:Number,
-            default:1000,
+            default:500,
             required:false,
         },
         profileImage:{
             type:String,
             required:true,
+        },
+        clinic:
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Clinic"
         }
     },
     {

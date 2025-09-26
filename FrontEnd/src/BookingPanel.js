@@ -1,10 +1,50 @@
-import React, { useState } from 'react';
-import { Calendar, MapPin, Clock, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, MapPin, User } from 'lucide-react';
 import './bookingPanel.css';
+import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 export default function BookingPanel() {
+  const location = useLocation();
+  const {doctorId,clinicId} = location.state;
+
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState('MORNING');
   const [selectedTime, setSelectedTime] = useState('');
+  const [doctor, setDoctor] = useState(null);
+  const [couponStats,setCouponStats] = useState(null);
+
+  useEffect(() => {
+    if (!doctorId) return;
+
+    const fetchDoctor = async () => {
+      try {
+        const response = await axios.get('/userProfile/get-doctor', {
+          params: { id: doctorId },
+        });
+        setDoctor(response.data.data);
+      } catch (error) {
+        console.error('Error fetching doctor:', error);
+      }
+    };
+
+    fetchDoctor();
+  }, [doctorId]);
+
+
+  useEffect(() => {
+    const fetchCouponStats = async () => {
+      try {
+        const res = await axios.get("/userProfile/get-coupon-stats", {
+          params: { doctorId, clinicId },
+        });
+        setCouponStats(res.data.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (doctorId && clinicId) fetchCouponStats();
+  }, [doctorId, clinicId]);
 
   const timePeriods = ['MORNING', 'AFTERNOON', 'EVENING'];
 
@@ -16,23 +56,29 @@ export default function BookingPanel() {
 
   const timeSlots = allTimeSlots[selectedTimeOfDay];
 
+  if (!doctor) return <p>Loading doctor details...</p>;
+
   return (
     <div className="dashboard-container">
       <div className="booking-header">
         <h1>Booking Panel</h1>
         <div className="top-section">
-          <div className="doctor-image"><User size={48} /></div>
+          <div className="doctor-image">
+            {doctor.profileImage ? <img src={doctor.profileImage} alt={doctor.email} /> : <User size={48} />}
+          </div>
           <div className="doctor-profile">
-            <h2>Dr. Swati D</h2>
-            <p className="speciality">General Physician</p>
-            <p className="experience">6+ years experience</p>
-            <p className="qualification">MBBS, MD General physician</p>
-            <div className="location"><MapPin size={16} /> Mumbai, Maharashtra</div>
+            <h2>{doctor.email}</h2>
+            <p className="speciality">{doctor.specialization.join(', ')}</p>
+            <p className="experience">{doctor.experience}+ years experience</p>
+            <p className="qualification">
+              {doctor.education?.map(ed => `${ed.degree} (${ed.university}, ${ed.year})`).join(', ')}
+            </p>
+            <div className="location"><MapPin size={16} /> {doctor.location || 'N/A'}</div>
           </div>
           <div className="appointment-info">
-            <h3>General Physician Appointment</h3>
-            <p className="fees">$600</p>
-            <p className="fee-label">Consultation Fee</p>
+            <h3>Appointment</h3>
+            <p className="fees">₹{doctor.rate || 600}</p>
+            <p className="fee-label">Total Bookings</p>
           </div>
         </div>
       </div>
@@ -55,11 +101,11 @@ export default function BookingPanel() {
 
             <div className="stats">
               <div className="stat-card">
-                <p className="value">26</p>
+                <p className="value">{couponStats.totalActive}</p>
                 <p className="label">Total Booking</p>
               </div>
               <div className="stat-card">
-                <p className="value orange">10</p>
+                <p className="value orange">{couponStats.currentCoupon}</p>
                 <p className="label">Current Token</p>
               </div>
             </div>

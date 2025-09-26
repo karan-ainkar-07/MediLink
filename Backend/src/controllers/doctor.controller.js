@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
 import { Doctor } from "../models/doctor.model.js";
+import { Appointment } from "../models/appointment.model.js";
 import {Queue} from "../models/queue.model.js"
 import {Prescription} from "../models/prescription.model.js"
 import { Coupon } from "../models/coupon.model.js";
@@ -12,18 +13,17 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password,experience,education,specialization,localFilePath}=req.body;
+    const {email,mobileNo,password,experience,education,specialization,localFilePath,clinic}=req.body;
 
     //validate details check if empty
     if (
-        [ email, mobileNo, password,localFilePath].some((field) => field?.trim() === "")
+        [ email, mobileNo, password,localFilePath,clinic].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
 
-    if(education.length()==0)
-    {
-        throw new ApiError(400,"Education cannot be empty");
+    if (!education || education.length === 0) {
+        throw new ApiError(400, "Education cannot be empty");
     }
 
     //check if user exists 
@@ -37,9 +37,12 @@ const registerUser=asyncHandler( async(req,res)=>{
 
     //Upload localFile on cloudinary using multer and get the Address of stored Image
     const localProfileImage=req.file;
-    
-    const profileImage= await uploadOnCloudinary(localProfileImage?.path);
 
+    if(localProfileImage)
+    {
+        const profileImage= await uploadOnCloudinary(localProfileImage?.path);
+    }
+    
     //if not create a new user object 
     const user=await Doctor.create(
         {
@@ -48,6 +51,7 @@ const registerUser=asyncHandler( async(req,res)=>{
             password,
             experience,
             education,
+            clinic,
             specialization,
             profileImage:(profileImage || ""),
         }
@@ -102,7 +106,6 @@ const loginUser=asyncHandler(async(req,res)=>{
 
     const options={
         httpOnly: true,
-        secure: true,
     }
 
     return res
@@ -180,7 +183,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     //generate new token and store to cookie
-    const { accessToken, newRefreshToken } = await generateAccessAndRefereshTokens(user._id)
+    const { accessToken, newRefreshToken } = await generateAccessAndRefreshTokens(user._id)
 
     return res
         .status(200)
@@ -273,15 +276,7 @@ const nextCoupon = asyncHandler(async (req, res) => {
     // 1. Get the latest coupon
     const {Doctor,Patient}= req.query;
 
-    const latestCoupon = await Coupon.findOne({Status:"Active"}).sort({ createdAt: -1 });
-
-    if (!latestCoupon) {
-        throw new ApiError(404, "No active coupons found");
-    }
-
-    latestCoupon.Status="Used";
-
-    // 2. Get the latest active appointment for this coupon (or doctor)
+    // 2. Get the latest active appointment of the doctor
     const latestAppointment = await Appointment.findOne({
         Doctor,
         Patient,
@@ -289,8 +284,16 @@ const nextCoupon = asyncHandler(async (req, res) => {
     }).sort({ createdAt: -1 });
 
     if (!latestAppointment) {
-        throw new ApiError(404, "No active appointments found for this coupon");
+        throw new ApiError(404, "No active appointments found for the doctor");
     }
+
+    const latestCoupon = await Coupon.findOne({appointment:latestAppointment._id,Status:"Active"}).sort({ createdAt: -1 });
+
+    if (!latestCoupon) {
+        throw new ApiError(404, "No active coupons found");
+    }
+
+    latestCoupon.Status="Used";
 
     // 3. Update appointment status
     latestAppointment.status = "completed";
@@ -320,6 +323,8 @@ const saveAndSendPrescription = asyncHandler(async(req,res)=>
     //get the Prescription form the body
     const {diagnoses,medicines,notes}=req.body;
 
+    const appointment=Appointment.findOne({patient,doctor:Doctor}).sort({createdAt:-1});
+
     if(!diagnoses || !diagnoses[0] || !medicines || !medicines[0])
     {
         throw new ApiError(
@@ -334,6 +339,7 @@ const saveAndSendPrescription = asyncHandler(async(req,res)=>
     //save the prescription
     const prescription=await Prescription.create(
         {
+            appointment:appointment._id,
             notes:(notes? notes: ""),
             diagnoses,
             medicines,

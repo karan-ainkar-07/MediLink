@@ -1,4 +1,5 @@
 import { UserInfo } from "../models/userInfo.model.js";
+import mongoose from "mongoose";
 import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
 import {Clinic} from "../models/Clinic.model.js"
@@ -16,93 +17,103 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
     //get the details of doctors 
     const getDoctors = asyncHandler(async (req, res) => {
-        let { specialization, city, page = 1, limit = 20 } = req.query;
-        page = parseInt(page);
-        limit = parseInt(limit);
-        const skip = (page - 1) * limit;
-
-        //find clinincs in the city
-        let clinicIds = [];
-        if (city) {
-          const clinics = await Clinic.find({ "address.city": city }).select("_id");
-          clinicIds = clinics.map(c => c._id);
-        
-          if (clinicIds.length === 0) {
-            return res.status(200).json({
-              success: true,
-              page,
-              limit,
-              totalDoctors: 0,
-              totalPages: 0,
-              hasMore: false,
-              data: [],
-            });
-          }
+      const { specialization, city } = req.query;
+    
+      // find clinics in the city
+      let clinicIds = [];
+      if (city) {
+        const clinics = await Clinic.find({ "Address.City": city }).select("_id");
+        clinicIds = clinics.map(c => c._id);
+      
+        if (clinicIds.length === 0) {
+          return res.status(200).json(
+            new ApiResponse(200, { data: [] }, "No doctors found in this city")
+          );
         }
+      }
     
-        //get the doctors based on the filters
-        const filter = {};
-        if (specialization) 
-            filter.specialization = specialization;
-
-        if (clinicIds.length > 0) 
-            filter.clinic = { $in: clinicIds };
+      // build filters
+      const filter = {};
+      if (specialization) filter.specialization = specialization;
+      if (clinicIds.length > 0) filter.clinic = { $in: clinicIds };
     
-        const doctors = await Doctor.find(filter)
-          .populate("clinic", "name address location")
-          .skip(skip)
-          .limit(limit);
+      // fetch doctors
+      const doctors = await Doctor.find(filter).populate(
+        "clinic",
+        "name Address location"
+      );
     
-        const totalDoctors = await Doctor.countDocuments(filter);
-    
-        res.status(200).json(
-            new ApiResponse(200,
-                {
-                    success: true,
-                    page,
-                    limit,
-                    totalDoctors,
-                    totalPages: Math.ceil(totalDoctors / limit),
-                    hasMore: page * limit < totalDoctors,
-                    data: doctors,
-                },
-                "Doctors fetched successfully"
-            )
-        );
+      res.status(200).json(
+        new ApiResponse(200, { data: doctors }, "Doctors fetched successfully")
+      );
     });
+
+    //get Doctor using doctorId
+    const getDoctor = asyncHandler( async (req,res)=>
+    {
+        const {doctorId}=req.query;
+        if(!doctorId)
+        {
+          throw new ApiError(
+            400,"Please enter valid doctorID"
+          )
+        }
+
+        const doctor=Doctor.findOne({_id:doctorId});
+        if(!doctor)
+        {
+          throw new ApiError(
+            404,"No doctor Found with this id"
+          )
+        }
+
+        res
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              doctor,
+              "Doctor fetched successfully"
+            )
+          )
+    })
+
 
     //View the slots 
     const getCouponStats = asyncHandler(async (req, res) => {
       const { doctorId, clinicId } = req.query;
-
+    
       if (!doctorId || !clinicId) {
-          throw new ApiError(400,"DoctorId and ClinicId is required")
+        throw new ApiError(400, "DoctorId and ClinicId is required");
       }
-
-      //match makes the appointment=null where the doctor and hospital dont matches
+    
       const coupons = await Coupon.find({ Status: { $in: ["Used", "Cancelled", "Booked"] } })
         .populate({
           path: "appointment",
           match: { doctor: doctorId, clinic: clinicId }
         });
-
+      
       const filteredCoupons = coupons.filter(c => c.appointment != null);
-
-      const totalActive = filteredCoupons.filter(c => c.Status !== "Used" && c.Status !== "Cancelled").length;
-      const currentCoupon = totalActive.sort((a,b)=>a.issuedAt - b.issuedAt);
-
-
-      res
-        .status(200)
-        .json(
-            new ApiResponse(200,{
-            success: true,
-            totalActive,
+      
+      const activeCoupons = filteredCoupons.filter(c => c.Status === "Booked");
+      
+      const sortedActiveCoupons = activeCoupons.sort((a, b) => a.issuedAt - b.issuedAt);
+      
+      const currentCoupon = sortedActiveCoupons.length > 0 ? sortedActiveCoupons[0] : null;
+      
+      res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            totalActive: activeCoupons.length,
             currentCoupon,
             totalCoupons: filteredCoupons.length
-            },"CouponStats fetched successfully")
-        );
+          },
+          "CouponStats fetched successfully"
+        )
+      );
     });
+
 
     //Book the slot
 
@@ -209,4 +220,5 @@ export  {
     getDoctors,
     getCouponStats,
     BookAppointment,
+    getDoctor,
 }

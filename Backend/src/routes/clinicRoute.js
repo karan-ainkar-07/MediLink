@@ -6,6 +6,6 @@ const router=Router();
 
 router.route('/SignUp').post(upload.single("localLogo"),registerClinic);
 router.route('/login').post(loginClinic);
-router.route('/logout').post(VerifyJWT,logoutClinic);
+router.route('/logout').post(VerifyJWT("Clinic"),logoutClinic);
 
 export default router;

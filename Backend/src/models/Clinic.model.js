@@ -30,7 +30,7 @@ const ClinicSchema=new Schema(
             type:String,
             required:false,
         },
-        Address:{
+        address:{
             Line1:
             {
                 type:String,

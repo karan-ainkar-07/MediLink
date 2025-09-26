@@ -1,3 +1,12 @@
+.pageWrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f2f5;
+}
+
 .container {
   background-color: #fff;
   border-radius: 10px;
@@ -12,7 +21,6 @@
   transition: all 1s ease-in-out;
 }
 
-/* Form containers */
 .formContainer {
   position: absolute;
   top: 0;
@@ -46,7 +54,6 @@
   z-index: 1;
 }
 
-/* Overlay */
 .overlayContainer {
   position: absolute;
   top: 0;
@@ -64,9 +71,6 @@
 
 .overlay {
   background: linear-gradient(to right, #33076c, #310a74);
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: 0 0;
   color: #FFFFFF;
   position: relative;
   left: -100%;
@@ -113,7 +117,6 @@
   transform: translateX(20%);
 }
 
-/* Auth-specific form */
 .authForm {
   background-color: #FFFFFF;
   display: flex;
@@ -176,9 +179,9 @@
 .cancelButton {
   position: absolute;
   top: 15px;
-  right: 15px;      /* red background */
+  right: 15px;
   color: red;
-  border: none;      /* circular button */
+  border: none;
   width: 35px;
   height: 35px;
   font-size: 18px;
@@ -187,6 +190,5 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;             /* ensures it's above overlay */
+  z-index: 1000;
 }
-
