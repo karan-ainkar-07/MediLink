@@ -11,11 +11,12 @@ const userSchema = new Schema(
             lowercase:true,
             trim:true,
         },
-        mobileNo:{
-            type:Number,
+        name:
+        {
+            type:String,
             required:true,
-            unique:true,
             trim:true,
+            lowercase:true,
         },
         password:{
             type:String,
@@ -23,10 +24,6 @@ const userSchema = new Schema(
         },
         refreshToken:{
             type:String,
-        },
-        isMobileVerified:{
-            type:Boolean,
-            default:false,
         },
         isEmailVerified:{
             type:Boolean,
@@ -43,6 +40,12 @@ const userSchema = new Schema(
     }
 )
 
+// delete the account if the email is not verified after 15 minutes
+userSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: 15 * 60, partialFilterExpression: { isEmailVerified: false } }
+);
+
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 
@@ -54,8 +57,6 @@ userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
 }
 
-export const User=mongoose.model("User",userSchema);
-
 userSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
@@ -63,9 +64,9 @@ userSchema.methods.generateAccessToken = function(){
             email: this.email,
             mobileNo: this.mobileNo,
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_KEY,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
         }
     )
 }
@@ -75,9 +76,11 @@ userSchema.methods.generateRefreshToken = function(){
         {
             _id: this._id,
         },
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_KEY,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
         }
     )
 }
+
+export const User=mongoose.model("User",userSchema);

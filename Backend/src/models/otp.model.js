@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 
 const otpSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+  email: {
+    type:String,
     required: true,
   },
   otp: {
@@ -12,7 +11,7 @@ const otpSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["email", "phone", "password_reset"],
+    enum: ["email", "password_reset"],
     required: true,
   },
   expiresAt: {
@@ -23,4 +22,4 @@ const otpSchema = new mongoose.Schema({
 
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-module.exports = mongoose.model("Otp", otpSchema);
+export const Otp = mongoose.model("Otp", otpSchema);

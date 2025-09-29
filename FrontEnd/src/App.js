@@ -5,12 +5,15 @@ import Auth from "./Auth"
 import Appointment from "./Appointment";
 import SymptomsChecker from "./SymptomChecker";
 import BookingPanel from "./BookingPanel";
-import DoctorDashboard from "./DoctorDashboard";
+import SignUp from "./userSignUp";
+import VerifyOTP from "./verifyOtp";
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Auth/> } />
+        <Route path="/signUp" element={<SignUp/>}/>
+        <Route path="/verifyOTP" element={<VerifyOTP/>}/>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/symptom" element={<SymptomsChecker />} />

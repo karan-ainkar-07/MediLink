@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt"
-import {Otp} from '../models/otp.model'
-import VerifyJWT from "../middleware/verifyJWT";
-import { ApiError } from "./ApiError";
+import {Otp} from '../models/otp.model.js'
+import { ApiError } from "./ApiError.js";
 
 function generateOTP(length ) {
   let otp = "";
@@ -11,11 +10,11 @@ function generateOTP(length ) {
   return otp;
 }
 
-async function createOTP(userId,length=6,type)
+async function createOTP(email,length=6,type)
 {
 
   await Otp.deleteMany({
-    $and: [{ userId: userId }, { type: type }]
+    $and: [{ email }, { type: type }]
   });
 
   const code=generateOTP(length);
@@ -24,7 +23,7 @@ async function createOTP(userId,length=6,type)
 
   await Otp.create(
     {
-      userId,
+      email,
       otp: hashedCode,
       type,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
@@ -34,8 +33,8 @@ async function createOTP(userId,length=6,type)
   return code;
 }
 
-async function VerifyOTP(userId,inputOTP){
-  const storedOtpObject= await Otp.findByID({userId});
+async function VerifyOTP(email,inputOTP){
+  const storedOtpObject= await Otp.findOne({email});
   
   if(!storedOtpObject)
   {
@@ -49,9 +48,9 @@ async function VerifyOTP(userId,inputOTP){
     throw new ApiError(401,"OTP is invalid")
   }
 
-  await Otp.deleteOne({ _id: record._id });
+  await Otp.deleteOne({ _id: storedOtpObject._id });
 
   return true;
 }
 
-export  {generateOTP, createOTP, VerifyOTP};
+export  {createOTP, VerifyOTP};

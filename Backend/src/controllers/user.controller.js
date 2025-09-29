@@ -2,7 +2,10 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
 import { User} from "../models/user.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Otp } from "../models/otp.model.js";
 import jwt from "jsonwebtoken"
+import { createOTP, VerifyOTP } from "../utils/OTP.js";
+import {sendEmail} from "../utils/Email.js"
 
 const generateAccessAndRefreshTokens = async(user) => {
     const accessToken = user.generateAccessToken();
@@ -17,29 +20,27 @@ const generateAccessAndRefreshTokens = async(user) => {
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password}=req.body;
+    const {email,password,name}=req.body;
 
     //validate details check if empty
     if (
-        [ email, mobileNo, password].some((field) => field?.trim() === "")
+        [ email, password, name].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
 
     //check if user exists 
-    const existedUser = await User.findOne({
-        $or: [{ mobileNo }, { email }]
-    })
+    const existedUser = await User.findOne({ email });
 
     if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists")
+        throw new ApiError(409, "This email is already registered")
     }
 
     //if not create a new user object 
     const user=await User.create(
         {
+            name,
             email,
-            mobileNo,
             password,
         }
     )
@@ -54,10 +55,75 @@ const registerUser=asyncHandler( async(req,res)=>{
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
+    //send Mail
+    const OTP= await createOTP(email,6,"email");
+    const subject="Your OTP for the Email verification"
+    const text=`${OTP} is your 6 digit One Time Password for the Email Verification`;
+
+    await sendEmail({
+      to: email,
+      subject: subject,
+      text: text
+    });
+
     //return the res 
     return res.status(201).json(
-        new ApiResponse(201,createdUser,"User Created succesfully")
+        new ApiResponse(201,{requiresVerification: true},"User Created succesfully ,OTP send to the Email, now verify the user ")
     )
+})
+
+const verifyEmail=asyncHandler( async(req,res) =>{
+    const {email,OTP} =req.body;
+
+    if(!email || !OTP)
+    {
+        throw new ApiError(401,"Please enter email and OTP");
+    }
+
+    const user=await User.findOne({email});
+
+    if(!user)
+    {
+        throw new ApiError(404,"Please register again , User Not Found");
+    }
+
+    const OTPdoc= await Otp.findOne({email,type:"email"})
+    
+    if(!OTPdoc)
+    {
+        throw new ApiError(404,"OTP not found or expired")
+    }
+
+    if(!(await VerifyOTP(email,OTP)))
+    {
+        throw new ApiError(402,"Incorrect OTP ");
+    }
+
+    user.isEmailVerified=true;
+    
+    await user.save();
+
+    //login the user 
+    const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(user);
+    user.password = undefined;
+
+    const options = {
+        httpOnly: process.env.ENVIRONMENT==="production",
+        secure: process.env.ENVIRONMENT==="production", 
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                { user, accessToken, refreshToken },
+                "Email verified Successfully"
+            )
+        );
+
 })
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -70,7 +136,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     // check if User exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email:email.toLowerCase() });
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -81,13 +147,31 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Incorrect password");
     }
 
+    if(!user.isEmailVerified)
+    {
+        //send Mail
+        const OTP=await createOTP(email,6,"email");
+        const subject="Your OTP for the Email verification"
+        const text=`${OTP} is your 6 digit One Time Password for the Email Verification`;
+        await sendEmail({
+          to: email,
+          subject: subject,
+          text: text
+        });
+
+        //route user to verify email ( through frontend)
+         return res.status(200).json(
+            new ApiResponse(200, { requiresVerification: true }, "OTP sent to email")
+         );
+
+    }
     // generate access and refresh tokens
     const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(user);
-    user.password = undefined; // remove password from response
+    user.password = undefined;
 
     const options = {
-        httpOnly: true,
-        secure: true, // add this if you are using HTTPS
+        httpOnly: process.env.ENVIRONMENT=== "production",
+        secure: process.env.ENVIRONMENT=== "production", 
     };
 
     return res
@@ -214,5 +298,6 @@ export {
     logOut,
     refreshAccessToken,
     resetPassword,
+    verifyEmail,
 };
 
