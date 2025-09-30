@@ -23,7 +23,7 @@ export default function AuthUI({ isSignUpActive, onClose }) {
 
       if (response.status >= 200 && response.status < 300) 
       {
-        if(!response.requiresVerification)
+        if(response.data.data?.requiresVerification)
         {
           navigate('/verifyOTP', { state: { email: email } });
         }

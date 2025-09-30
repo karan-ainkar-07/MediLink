@@ -136,7 +136,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     // check if User exists
-    const user = await User.findOne({ email:email.toLowerCase() });
+    const user = await User.findOne({ email:email.trim() });
     if (!user) {
         throw new ApiError(404, "User not found");
     }
@@ -181,7 +181,7 @@ const loginUser = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                { user, accessToken, refreshToken },
+                { user, accessToken, refreshToken,requiresVerification:false },
                 "User logged in successfully"
             )
         );

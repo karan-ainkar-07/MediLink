@@ -1,6 +1,7 @@
 import {asyncHandler} from "../utils/AsyncHandler.js";
 import { Clinic } from "../models/Clinic.model.js";
 import {ApiError} from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 
 const loginClinic = asyncHandler(async (req, res) => {
@@ -50,23 +51,31 @@ const loginClinic = asyncHandler(async (req, res) => {
 
 const registerClinic = asyncHandler(async (req, res) => {
     // Get clinic details from request
-    const { name, password, addressLine1, addressLine2, city, country } = req.body;
+    const { name, password, addressLine1, addressLine2, city, country, mobileNo, email } = req.body;
 
     // Validate required fields
-    if ([name, password, addressLine1, city, country].some(field => !field || field.trim() === "")) {
-        throw new ApiError(400, "All required fields must be provided");
-    }
+        if ([name, password, addressLine1, city, country, mobileNo, email].some(field => {
+            if (typeof field === "string") return field.trim() === "";
+            return field == null; 
+        })) 
+        {
+            throw new ApiError(400, "All required fields must be provided");
+        }
+
 
     // Upload logo to Cloudinary if provided
-    const localLogo = req.file; // multer should handle this
+    const localLogo = req.file;
+    console.log(localLogo);
     const logo = localLogo ? await uploadOnCloudinary(localLogo.path) : "";
 
     // Create new clinic
     const clinic = await Clinic.create({
         name,
         password,
-        logo,
-        Address: {
+        logo:logo.url,
+        mobileNo,
+        email,
+        address: {
             Line1: addressLine1,
             Line2: addressLine2 || "",
             City: city,
@@ -99,6 +108,10 @@ const logoutClinic = asyncHandler(async (req, res) => {
         .clearCookie("accessToken", options)
         .json(new ApiResponse(200, {}, "Clinic Logged Out"));
 });
+
+const getClinic =asyncHandler(async ( req, res)=>{
+    const {name,City}=req.query();
+})
 
 export {
     loginClinic,

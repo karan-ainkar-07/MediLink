@@ -1,4 +1,6 @@
 import mongoose,{Schema} from "mongoose";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
 const timingSchema = new Schema({
   week: {
@@ -29,6 +31,18 @@ const ClinicSchema=new Schema(
         logo:{
             type:String,
             required:false,
+        },
+        email:
+        {
+            type:String,
+            required:true,
+            unique:true,
+        },
+        mobileNo:
+        {
+            type:Number,
+            required:true,
+            unique:true,
         },
         address:{
             Line1:
@@ -61,6 +75,7 @@ const ClinicSchema=new Schema(
         {
             type:String,
             enum:["Open","Closed"],
+            default:"Open",
         },
         Timing:[timingSchema],
 
@@ -81,7 +96,17 @@ const ClinicSchema=new Schema(
     }
 )
 
-export const Clinic=mongoose.model("Clinic",ClinicSchema);
+ClinicSchema.pre("save", async function (next) {
+    if(!this.isModified("password")) return next();
+
+    this.password = await bcrypt.hash(this.password, 10)
+    next();
+})
+
+ClinicSchema.methods.isPasswordCorrect = async function(password){
+    return await bcrypt.compare(password, this.password)
+}
+
 ClinicSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
@@ -94,3 +119,5 @@ ClinicSchema.methods.generateAccessToken = function(){
         }
     )
 }
+
+export const Clinic=mongoose.model("Clinic",ClinicSchema);

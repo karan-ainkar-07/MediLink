@@ -13,11 +13,11 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password,experience,education,specialization,localFilePath,clinic}=req.body;
+    const {email,password,experience,education,specialization,localFilePath,clinic}=req.body;
 
     //validate details check if empty
     if (
-        [ email, mobileNo, password,localFilePath,clinic].some((field) => field?.trim() === "")
+        [ email,password,localFilePath,clinic].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
@@ -47,7 +47,6 @@ const registerUser=asyncHandler( async(req,res)=>{
     const user=await Doctor.create(
         {
             email,
-            mobileNo,
             password,
             experience,
             education,

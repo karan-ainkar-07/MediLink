@@ -1,12 +1,12 @@
+import dotenv from "dotenv";
+await dotenv.config(); 
+console.log("done");
+
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import connectDB from './config/DB.js'
-import dotenv from "dotenv";
 
-dotenv.config(); 
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
 
 const app = express()
 
