@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./Appointment.css";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { backendUrl } from "./constants";
 
 export default function Appointment() {
   const navigate = useNavigate();
@@ -19,24 +21,21 @@ export default function Appointment() {
       const queryParams = new URLSearchParams();
       if (speciality) queryParams.append("specialization", speciality);
       if (location) queryParams.append("city", location);
+      if (date) queryParams.append("date", date); 
 
-      const res = await fetch(
-        `http://localhost:5000/userProfile/get-doctor?${queryParams.toString()}`,
+      const res = await axios.get(
+        `${backendUrl}/userProfile/get-doctors?${queryParams.toString()}`,
         {
-          method: "GET",
-          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to fetch doctors");
-
-      setResults(data.data); 
+      console.log(res);
+      setResults(res.data.data.docList);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Failed to fetch doctors");
       setResults([]);
     } finally {
       setLoading(false);
@@ -84,43 +83,54 @@ export default function Appointment() {
       {error && <p className="error">{error}</p>}
 
       <div className="doctor-results">
-        {results.length > 0 ? (
+        {
+        results.length > 0 ? (
           results.map((doc) => (
             <div key={doc._id} className="doctor-card">
               <div className="doctor-image">
-                <img src={doc.profileImage || "/default-avatar.png"} alt={doc.email} />
+                <img
+                  src={doc.profileImage }
+                  alt={doc.email}
+                />
               </div>
 
               <div className="doctor-info">
                 <h3 className="doctor-header">{doc.email}</h3>
                 <p>
-                  <strong>Speciality:</strong> {doc.specialization}
+                  <strong>Speciality:</strong> {doc.specialization || "N/A"}
                 </p>
                 <p>
-                  <strong>Experience:</strong> {doc.experience} years
+                  <strong>Experience:</strong> {doc.experience || 0} years
                 </p>
                 <p>
-                  <strong>Qualification:</strong> {doc.education.join(", ")}
+                  <strong>Qualification:</strong>{" "}
+                  {Array.isArray(doc.education)
+                    ? doc.education.map((e) => e.degree || "").join(", ")
+                    : "N/A"}
                 </p>
               </div>
 
               <div className="doctor-footer">
-                <button className="btn-view" onClick={() => 
-                  {
-                    const doctorId=doc._id;
-                    const clinicId=doc.clinic;
-                    navigate("/BookingPanel",{state:{
-                      doctorId,
-                      clinicId,
-                      }})}
-                }>  
+                <button
+                  className="btn-view"
+                  onClick={() => {
+                    const doctorId = doc._id;
+                    const clinicId = doc.clinic;
+                    navigate(`/BookingPanel/${doc._id}`);
+                  }}
+                >
                   View
                 </button>
               </div>
             </div>
           ))
         ) : (
-          <p className="no-results">No doctors found. Try adjusting filters.</p>
+          !loading &&
+          !error && (
+            <p className="no-results">
+              No doctors found. Try adjusting filters.
+            </p>
+          )
         )}
       </div>
     </div>

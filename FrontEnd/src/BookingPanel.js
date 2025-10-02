@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, MapPin, User } from 'lucide-react';
 import './bookingPanel.css';
-import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
+import { backendUrl } from './constants';
 
 export default function BookingPanel() {
-  const location = useLocation();
-  const {doctorId,clinicId} = location.state;
+  const {doctorId} = useParams();
 
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState('MORNING');
   const [selectedTime, setSelectedTime] = useState('');
   const [doctor, setDoctor] = useState(null);
-  const [couponStats,setCouponStats] = useState(null);
+  // const [couponStats,setCouponStats] = useState(null);
 
   useEffect(() => {
     if (!doctorId) return;
 
     const fetchDoctor = async () => {
       try {
-        const response = await axios.get('/userProfile/get-doctor', {
-          params: { id: doctorId },
+        const response = await axios.get(`${backendUrl}/userProfile/get-doctor`,{
+          params:{doctorId}
         });
         setDoctor(response.data.data);
       } catch (error) {
@@ -31,20 +31,20 @@ export default function BookingPanel() {
   }, [doctorId]);
 
 
-  useEffect(() => {
-    const fetchCouponStats = async () => {
-      try {
-        const res = await axios.get("/userProfile/get-coupon-stats", {
-          params: { doctorId, clinicId },
-        });
-        setCouponStats(res.data.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchCouponStats = async () => {
+  //     try {
+  //       const res = await axios.get("/userProfile/get-coupon-stats", {
+  //         params: { doctorId, clinicId },
+  //       });
+  //       setCouponStats(res.data.data);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    if (doctorId && clinicId) fetchCouponStats();
-  }, [doctorId, clinicId]);
+  //   if (doctorId && clinicId) fetchCouponStats();
+  // }, [doctorId, clinicId]);
 
   const timePeriods = ['MORNING', 'AFTERNOON', 'EVENING'];
 
@@ -73,7 +73,7 @@ export default function BookingPanel() {
             <p className="qualification">
               {doctor.education?.map(ed => `${ed.degree} (${ed.university}, ${ed.year})`).join(', ')}
             </p>
-            <div className="location"><MapPin size={16} /> {doctor.location || 'N/A'}</div>
+            <div className="location"><MapPin size={16} /> {doctor.address || 'N/A'}</div>
           </div>
           <div className="appointment-info">
             <h3>Appointment</h3>
@@ -101,11 +101,11 @@ export default function BookingPanel() {
 
             <div className="stats">
               <div className="stat-card">
-                <p className="value">{couponStats.totalActive}</p>
+                {/* <p className="value">{couponStats.totalActive}</p> */}
                 <p className="label">Total Booking</p>
               </div>
               <div className="stat-card">
-                <p className="value orange">{couponStats.currentCoupon}</p>
+                {/* <p className="value orange">{couponStats.currentCoupon}</p> */}
                 <p className="label">Current Token</p>
               </div>
             </div>

@@ -15,16 +15,15 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 //Book Doctor (coupon management)
 
-    //get the details of doctors 
+    //get the list of doctors 
     const getDoctors = asyncHandler(async (req, res) => {
       const { specialization, city } = req.query;
     
       // find clinics in the city
       let clinicIds = [];
       if (city) {
-        const clinics = await Clinic.find({ "Address.City": city }).select("_id");
+        const clinics = await Clinic.find({ "address.city": city }).select("_id");
         clinicIds = clinics.map(c => c._id);
-      
         if (clinicIds.length === 0) {
           return res.status(200).json(
             new ApiResponse(200, { data: [] }, "No doctors found in this city")
@@ -34,17 +33,20 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     
       // build filters
       const filter = {};
-      if (specialization) filter.specialization = specialization;
-      if (clinicIds.length > 0) filter.clinic = { $in: clinicIds };
+      if (specialization) 
+          filter.specialization = specialization;
+        
+      if (clinicIds.length > 0) 
+          filter.clinic = { $in: clinicIds };
     
       // fetch doctors
       const doctors = await Doctor.find(filter).populate(
         "clinic",
-        "name Address location"
+        "name address location"
       );
     
-      res.status(200).json(
-        new ApiResponse(200, { data: doctors }, "Doctors fetched successfully")
+      return res.status(200).json(
+        new ApiResponse(200, { docList: doctors }, "Doctors fetched successfully")
       );
     });
 
@@ -59,7 +61,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
           )
         }
 
-        const doctor=Doctor.findOne({_id:doctorId});
+        const doctor=await Doctor.findOne({_id:doctorId}).populate("clinic","address name ");
         if(!doctor)
         {
           throw new ApiError(

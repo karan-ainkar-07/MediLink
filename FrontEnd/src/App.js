@@ -23,7 +23,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/symptom" element={<SymptomsChecker />} />
-        <Route path="/bookingPanel" element={<BookingPanel />} />
+        <Route path="/bookingPanel/:doctorId" element={<BookingPanel />} />
       </Routes>
     </Router>
 
