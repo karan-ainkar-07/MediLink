@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 export default function AuthUI({ isSignUpActive, onClose }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user"); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -16,25 +17,28 @@ export default function AuthUI({ isSignUpActive, onClose }) {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.post(`${backendUrl}/user/login`, {
+      const response = await axios.post(`${backendUrl}/${role}/login`, {
         email,
         password,
       },{withCredentials: true});
 
       if (response.status >= 200 && response.status < 300) 
       {
-        if(response.data.data?.requiresVerification)
+        if(role==="user")
         {
-          navigate('/verifyOTP', { state: { email: email } }  );
+          if(response.data.data?.requiresVerification)
+          {
+            navigate('/verifyOTP', { state: { email: email } }  );
+          }
+          else
+          {
+              navigate("/dashboard");
+          }
         }
-        else
-        {
-            navigate("/dashboard");
-            const {refreshToken,accessToken,user}=response.data.data;
-            console.log(refreshToken);
-            console.log(accessToken);
-            console.log(user);
+        else{
+          alert("Doctor logged in");
         }
+
 
       } 
       else {
@@ -71,6 +75,16 @@ export default function AuthUI({ isSignUpActive, onClose }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <select
+            className={styles.authInput}
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="user">User</option>
+            <option value="doctor">Doctor</option>
+          </select>
+
           {error && <p style={{ color: "red", marginTop: "10px" }}>{error}</p>}
           <button
             className={styles.authButton}

@@ -82,8 +82,6 @@ doctorSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
 }
 
-export const Doctor=mongoose.model("Doctor",doctorSchema);
-
 doctorSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
@@ -91,7 +89,7 @@ doctorSchema.methods.generateAccessToken = function(){
             email: this.email,
             mobileNo: this.mobileNo,
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_KEY,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
@@ -103,9 +101,11 @@ doctorSchema.methods.generateRefreshToken = function(){
         {
             _id: this._id,
         },
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_KEY,
         {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     )
 }
+
+export const Doctor=mongoose.model("Doctor",doctorSchema);
