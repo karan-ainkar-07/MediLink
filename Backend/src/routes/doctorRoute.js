@@ -4,7 +4,7 @@ import VerifyJWT from "../middleware/verifyJWT.js";
 import {upload} from "../middleware/multer.js"
 const router=Router();
 
-router.route('/SignUp').post(upload.single("profileImage"),registerUser);
+router.route('/signUp').post(upload.single("profileImage"),registerUser);
 router.route('/login').post(loginUser);
 router.route('/logout').post(VerifyJWT("Doctor"),logOut);
 router.route('/refresh-token').post(refreshAccessToken);

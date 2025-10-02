@@ -62,7 +62,8 @@ const doctorSchema = new Schema(
         clinic:
         {
             type:mongoose.Schema.Types.ObjectId,
-            ref:"Clinic"
+            ref:"Clinic",
+            required:true,
         }
     },
     {

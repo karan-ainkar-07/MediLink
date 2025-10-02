@@ -8,18 +8,22 @@ import BookingPanel from "./BookingPanel";
 import SignUp from "./userSignUp";
 import VerifyOTP from "./verifyOtp";
 import ClinicSignup from "./ClinicRegister";
+import LoginClinic from "./clinicLogin";
+import DoctorRegistration from "./doctorSingup";
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Auth/> } />
-        <Route path="/Clinic-SignUp" element={<ClinicSignup/>}/>
+        <Route path="/clinic-signUp" element={<ClinicSignup/>}/>
+        <Route path="/clinic-signIn" element={<LoginClinic/>}/>
+        <Route path="/doctor-signUp" element={<DoctorRegistration/>} />
         <Route path="/signUp" element={<SignUp/>}/>
         <Route path="/verifyOTP" element={<VerifyOTP/>}/>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/symptom" element={<SymptomsChecker />} />
-        <Route path="/BookingPanel" element={<BookingPanel />} />
+        <Route path="/bookingPanel" element={<BookingPanel />} />
       </Routes>
     </Router>
 

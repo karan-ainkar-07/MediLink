@@ -13,19 +13,26 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,password,experience,education,specialization,localFilePath,clinic}=req.body;
+    const {email,mobileNo,password,experience,educationString,specialization,clinic}=req.body;
 
+    //get loalFile from multer req.files
+    const localFilePath=req.file;
     //validate details check if empty
     if (
-        [ email,password,localFilePath,clinic].some((field) => field?.trim() === "")
+        [ email,mobileNo,password,clinic].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
+    }
+
+    let education=[];
+    if (typeof educationString === "string") {
+        education = JSON.parse(educationString);
     }
 
     if (!education || education.length === 0) {
         throw new ApiError(400, "Education cannot be empty");
     }
-
+  
     //check if user exists 
     const existedUser = await Doctor.findOne({
         $or: [{ mobileNo }, { email }]
@@ -36,29 +43,30 @@ const registerUser=asyncHandler( async(req,res)=>{
     }
 
     //Upload localFile on cloudinary using multer and get the Address of stored Image
-    const localProfileImage=req.file;
+    let profileImage = ""; 
 
-    if(localProfileImage)
-    {
-        const profileImage= await uploadOnCloudinary(localProfileImage?.path);
+    if (localFilePath) {
+        const uploaded = await uploadOnCloudinary(localFilePath.path);
+        profileImage = uploaded?.url || ""; 
     }
     
     //if not create a new user object 
     const user=await Doctor.create(
         {
             email,
+            mobileNo,
             password,
             experience,
             education,
             clinic,
             specialization,
-            profileImage:(profileImage || ""),
+            profileImage,
         }
     )
 
     //remove password and refresh token from the res
     const createdUser = await Doctor.findById(user._id).select(
-        "-password -refreshToken"
+        "-password"
     )
 
     //check if user is created 
@@ -162,7 +170,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     const decodedToken = jwt.verify(
         incomingRefreshToken,
-        process.env.REFRESH_TOKEN_SECRET
+        process.env.REFRESH_TOKEN_KEY
     )
 
     const user = await Doctor.findById(decodedToken?._id)

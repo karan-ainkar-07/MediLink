@@ -31,6 +31,7 @@ const ClinicSchema=new Schema(
         logo:{
             type:String,
             required:false,
+            default:"",
         },
         email:
         {
@@ -45,40 +46,43 @@ const ClinicSchema=new Schema(
             unique:true,
         },
         address:{
-            Line1:
+            line1:
             {
                 type:String,
                 required:true,
             },
-            Line2:
+            line2:
             {
                 type:String,
                 required:false,
             },
-            City:
+            city:
             {
                 type:String,
                 required:true
             },
-            Country:
+            country:
             {
                 type:String,
                 required:true,
             },
-            LatLon:
+            latLon:
             {
                 type:String,
                 required:false,
             }
         },
-        Status:
+        status:
         {
             type:String,
             enum:["Open","Closed"],
             default:"Open",
         },
-        Timing:[timingSchema],
-
+        timing:
+        {
+            type:[timingSchema],
+            required:false,
+        },
         ratings: {
             type: Number,
             default: 0
@@ -111,11 +115,23 @@ ClinicSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         {
             _id: this._id,
-            name:this.name,
+            email:this.email,
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_KEY,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+        }
+    )
+}
+
+ClinicSchema.methods.generateRefreshToken = function(){
+    return jwt.sign(
+        {
+            _id: this._id,
+        },
+        process.env.REFRESH_TOKEN_KEY,
+        {
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
         }
     )
 }

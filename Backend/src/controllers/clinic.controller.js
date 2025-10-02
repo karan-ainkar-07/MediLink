@@ -4,17 +4,31 @@ import {ApiError} from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 
+const generateAccessAndRefreshTokens = async(user) => {
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+}
+
 const loginClinic = asyncHandler(async (req, res) => {
     // Get data from frontend
-    const { name, password } = req.body;
+    const { email, password } = req.body;
 
     // Validate if empty
-    if (!name) {
-        throw new ApiError(400, "Email or mobile number is required");
+    if (!email) {
+        throw new ApiError(400, "Email is required");
+    }
+    if(!password)
+    {
+        throw new ApiError(400,"Password is required");
     }
 
     // Check if Clinic exists
-    const clinic = await Clinic.findOne(name);
+    const clinic = await Clinic.findOne({email});
 
     if (!clinic) {
         throw new ApiError(400, "Clinic does not exist");
@@ -26,12 +40,12 @@ const loginClinic = asyncHandler(async (req, res) => {
     }
 
     // Generate access token
-    const accessToken = Clinic.generateAccessToken(clinic._id); 
+    const {accessToken} = await generateAccessAndRefreshTokens(clinic); 
     clinic.password = undefined; 
 
     const options = {
-        httpOnly: true,
-        secure: true, 
+        httpOnly: process.env.ENVIRONMENT=== "production",
+        secure: process.env.ENVIRONMENT=== "production", 
     };
 
     return res
@@ -76,10 +90,10 @@ const registerClinic = asyncHandler(async (req, res) => {
         mobileNo,
         email,
         address: {
-            Line1: addressLine1,
-            Line2: addressLine2 || "",
-            City: city,
-            Country: country
+            line1: addressLine1,
+            line2: addressLine2 || "",
+            city: city,
+            country: country
         },
         Status: "Open"
     });
@@ -110,11 +124,30 @@ const logoutClinic = asyncHandler(async (req, res) => {
 });
 
 const getClinic =asyncHandler(async ( req, res)=>{
-    const {name,City}=req.query();
+    const {name,city}=req.query;
+
+    const filter = {};
+    if (name) filter.name = { $regex: name, $options: "i" }; 
+    if (city) filter["address.city"] = { $regex: city, $options: "i" };
+
+    const clinics = await Clinic.find(filter).select("-password -refreshToken");
+
+    if(!clinics || clinics.length===0)
+    {
+        throw new ApiError(404,"No Clinic found");
+    }
+    console.log(clinics);
+    return res
+            .status(200)
+            .json(
+                new ApiResponse(200,clinics,"Clinics Fetched Successfully")
+            )
+
 })
 
 export {
     loginClinic,
     registerClinic,
     logoutClinic,
+    getClinic,
 }

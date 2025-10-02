@@ -19,17 +19,21 @@ export default function AuthUI({ isSignUpActive, onClose }) {
       const response = await axios.post(`${backendUrl}/user/login`, {
         email,
         password,
-      });
+      },{withCredentials: true});
 
       if (response.status >= 200 && response.status < 300) 
       {
         if(response.data.data?.requiresVerification)
         {
-          navigate('/verifyOTP', { state: { email: email } });
+          navigate('/verifyOTP', { state: { email: email } }  );
         }
         else
         {
             navigate("/dashboard");
+            const {refreshToken,accessToken,user}=response.data.data;
+            console.log(refreshToken);
+            console.log(accessToken);
+            console.log(user);
         }
 
       } 
