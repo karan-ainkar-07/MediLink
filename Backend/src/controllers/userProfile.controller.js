@@ -82,7 +82,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 
     //View the slots 
-    const getCouponStats = asyncHandler(async (req, res) => {
+    const getCouponStats = asyncHandler(async (req,res) => {
       const { doctorId, clinicId } = req.query;
     
       if (!doctorId || !clinicId) {

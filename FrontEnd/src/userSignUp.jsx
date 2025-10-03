@@ -18,7 +18,7 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try{
-      const response=await axios.post(`${backendUrl}/user/SignUp`,{ withCredentials: true });
+      const response=await axios.post(`${backendUrl}/user/SignUp`,{formData},{ withCredentials: true });
       if(response.data?.data?.requiresVerification)
       {
         navigate("/verifyOTP", { state: { email: formData.email } });

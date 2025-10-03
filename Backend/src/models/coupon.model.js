@@ -22,6 +22,11 @@ const CouponSchema=new Schema(
             type:String,
             enum:["Used","Cancelled","Active"]
         },
+        timeTaken:
+        {
+            type:Number,
+            required:false,
+        },
         issuedAt:
         {
             type:Date,

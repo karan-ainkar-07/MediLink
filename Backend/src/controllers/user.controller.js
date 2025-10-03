@@ -20,7 +20,7 @@ const generateAccessAndRefreshTokens = async(user) => {
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,password,name}=req.body;
+    const {email,password,name}=req.body.formData;
 
     //validate details check if empty
     if (
@@ -36,6 +36,8 @@ const registerUser=asyncHandler( async(req,res)=>{
         throw new ApiError(409, "This email is already registered")
     }
 
+    console.log(name)
+    console.log(typeof(name));
     //if not create a new user object 
     const user=await User.create(
         {
