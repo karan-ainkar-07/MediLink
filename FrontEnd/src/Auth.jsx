@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import styles from "./mystyles.module.css";
 import axios from "axios";
 import { backendUrl } from "./constants";
 import { useNavigate } from "react-router-dom";
+import "./Auth.css";
 
 export default function AuthUI({ isSignUpActive, onClose }) {
   const [email, setEmail] = useState("");
