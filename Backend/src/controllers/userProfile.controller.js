@@ -84,32 +84,34 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     //View the slots 
     const getCouponStats = asyncHandler(async (req,res) => {
       const { doctorId, clinicId } = req.query;
-    
+      
       if (!doctorId || !clinicId) {
         throw new ApiError(400, "DoctorId and ClinicId is required");
       }
-    
-      const coupons = await Coupon.find({ Status: { $in: ["Used", "Cancelled", "Booked"] } })
-        .populate({
-          path: "appointment",
-          match: { doctor: doctorId, clinic: clinicId }
-        });
-      
-      const filteredCoupons = coupons.filter(c => c.appointment != null);
-      
-      const activeCoupons = filteredCoupons.filter(c => c.Status === "Booked");
-      
-      const sortedActiveCoupons = activeCoupons.sort((a, b) => a.issuedAt - b.issuedAt);
-      
-      const currentCoupon = sortedActiveCoupons.length > 0 ? sortedActiveCoupons[0] : null;
+      const start=new Date();
+      start.setHours(0,0,0,0);
+
+      const end=new Date(start);
+      end.setDate(end.getDate()+1);
+
+      const queue = await Queue.findOneAndUpdate(
+        { clinic: clinicId, doctor: doctorId, date: { $gte: start, $lt: end }  },
+        {      
+          date: new Date(), 
+          doctor: doctorId,          
+          clinic: clinicId 
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      );
       
       res.status(200).json(
         new ApiResponse(
           200,
           {
-            totalActive: activeCoupons.length,
-            currentCoupon,
-            totalCoupons: filteredCoupons.length
+            currentCoupon:queue.currentToken,
+            totalCoupons: queue.totalTokens,
+            queueStatus:queue.status,
+            queue:queue,
           },
           "CouponStats fetched successfully"
         )
@@ -118,103 +120,51 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 
     //Book the slot
-
-    const generateNextCouponNumber = async (doctorId, clinicId) => {
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-    
-      const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
-    
-      // Find the latest coupon for this doctor+clinic for today
-      const appointmentsToday = await Appointment.find({
-        doctor: mongoose.Types.ObjectId(doctorId),
-        clinic: mongoose.Types.ObjectId(clinicId),
-        date: { $gte: startOfDay, $lte: endOfDay }
-      }).select("_id");
-
-      const appointmentIds = appointmentsToday.map(a => a._id);
-      
-      const lastCoupon = await Coupon.findOne({
-        appointment: { $in: appointmentIds },
-      }).sort({ issuedAt: -1 });
-    
-      return lastCoupon ? lastCoupon.couponNumber + 1 : 1; 
-    };
-
     const BookAppointment = asyncHandler(async (req, res) => {
-      const { doctorId, clinicId } = req.query;
-      const user = req.user;
+      // get the queue and userID from query
+      const { queue } = req.body;
+
+      const userID = req.user?._id;
     
-      if (!doctorId || !clinicId) {
-        throw new ApiError(400, "DoctorId and ClinicId are required");
+      if (!queue || !userID) {
+        throw new ApiError(404, "No userID or queue provided");
       }
-  
-      if (!user) {
-        throw new ApiError(401, "Unauthorized Access");
-      }
-  
-      //Create the appointment
+    
+      // get the total coupons from queue
+      const { totalTokens, doctor, clinic } = queue;
+    
+      // create a new appointment
       const appointment = await Appointment.create({
-        patient: user._id,
-        doctor: doctorId,
-        clinic: clinicId,
+        patient: userID,
+        doctor: doctor,
+        clinic: clinic,
         date: new Date(),
-        status: "Booked"
       });
-  
-  
-      const nextNumber=await generateNextCouponNumber(doctorId,clinicId);
-
-      //create a new queue if it is the first coupon
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-
-        const endOfDay = new Date();
-        endOfDay.setHours(23, 59, 59, 999); 
-
-        let queue = await Queue.findOne({
-          Doctor: doctorId,
-          Clinic: clinicId,
-          date: { $gte: startOfDay, $lte: endOfDay }
-        });
-
-
-      if(!queue)
-      {
-        queue=await Queue.create(
-          {
-            Doctor:doctorId,
-            Clinic:clinicId,
-            Status:"Stopped",
-            date:new Date()
-          }
-        )
-      }
-
-
-      //Create the coupon
+    
+      // increment the queue token count
+      const couponNumber = totalTokens + 1;
+    
+      // create a new coupon linked to the appointment
       const coupon = await Coupon.create({
         appointment: appointment._id,
-        issuedAt: new Date(),
+        couponNumber: couponNumber,
         Status: "Active",
-        couponNumber: nextNumber,
-        partOfQueue:queue._id,
+        issuedAt: new Date(),
+        partOfQueue: queue._id,
       });
+    
+      // update the queue totalTokens
+      const queueDoc = await Queue.findById(queue._id);
+      queueDoc.totalTokens += 1;
+      await queueDoc.save();
 
-  
-      res
-        .status(201)
-        .json(
-            new ApiResponse(201,
-                {
-                    success: true,
-                    appointment,
-                    coupon
-                },"Appointment booked successfully"
-            )
-        );
+    
+      // return the coupon as response
+      return res.status(200).json(
+        new ApiResponse(200, coupon, "Appointment booked successfully")
+      );
     });
+
 
 
 

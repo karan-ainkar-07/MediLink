@@ -7,11 +7,24 @@ import { backendUrl } from './constants';
 
 export default function BookingPanel() {
   const {doctorId} = useParams();
-
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState('MORNING');
   const [selectedTime, setSelectedTime] = useState('');
   const [doctor, setDoctor] = useState(null);
-  // const [couponStats,setCouponStats] = useState(null);
+  const [couponStats,setCouponStats] = useState(null);
+  const [clinicId,setClinicId] = useState(null);
+  const [queue,setQueue] = useState(null);
+  const bookAppointment=async()=>{
+    console.log(queue);
+    const response= await axios.post(`${backendUrl}/userProfile/book-appointment`,
+    {
+      queue
+    },
+    {
+      withCredentials:true,
+    }
+  );
+    alert(response.data.message);
+  }
 
   useEffect(() => {
     if (!doctorId) return;
@@ -22,6 +35,7 @@ export default function BookingPanel() {
           params:{doctorId}
         });
         setDoctor(response.data.data);
+        setClinicId(response.data.data.clinic._id);
       } catch (error) {
         console.error('Error fetching doctor:', error);
       }
@@ -31,20 +45,28 @@ export default function BookingPanel() {
   }, [doctorId]);
 
 
-  // useEffect(() => {
-  //   const fetchCouponStats = async () => {
-  //     try {
-  //       const res = await axios.get("/userProfile/get-coupon-stats", {
-  //         params: { doctorId, clinicId },
-  //       });
-  //       setCouponStats(res.data.data);
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchCouponStats = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/userProfile/get-coupon-stats`, {
+          params: { doctorId, clinicId },
+        });
+        setCouponStats(res.data.data);
+        setQueue(res.data.data.queue);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  //   if (doctorId && clinicId) fetchCouponStats();
-  // }, [doctorId, clinicId]);
+    if (doctorId && clinicId) 
+    {
+      fetchCouponStats();
+    }
+  }, [doctorId, clinicId]);
+
+  useEffect(() => {
+  console.log('couponStats updated:', couponStats);
+}, [couponStats]);
 
   const timePeriods = ['MORNING', 'AFTERNOON', 'EVENING'];
 
@@ -101,11 +123,11 @@ export default function BookingPanel() {
 
             <div className="stats">
               <div className="stat-card">
-                {/* <p className="value">{couponStats.totalActive}</p> */}
+                <p className="value">{couponStats?.totalCoupons || 0}</p>
                 <p className="label">Total Booking</p>
               </div>
               <div className="stat-card">
-                {/* <p className="value orange">{couponStats.currentCoupon}</p> */}
+                <p className="value orange">{couponStats?.currentCoupon || 0}</p>
                 <p className="label">Current Token</p>
               </div>
             </div>
@@ -126,7 +148,7 @@ export default function BookingPanel() {
       </div>
 
       <div className="bottom-section">
-        <button className="schedule-btn" disabled={!selectedTime}>
+        <button className="schedule-btn" disabled={!selectedTime} onClick={bookAppointment}>
           <Calendar size={20} /> Schedule Appointment
         </button>
         {selectedTime && <div className="selected-info">Selected: {selectedTimeOfDay} at {selectedTime}</div>}

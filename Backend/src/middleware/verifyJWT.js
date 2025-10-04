@@ -19,7 +19,7 @@ const VerifyJWT = (role) =>
     //  Verify token
     let decodedJWT;
     try {
-      decodedJWT = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      decodedJWT = jwt.verify(token, process.env.ACCESS_TOKEN_KEY);
     } catch (err) {
       throw new ApiError(401, "Invalid Access Token");
     }
@@ -50,7 +50,11 @@ const VerifyJWT = (role) =>
     }
 
     // 5. Attach user to request
-    req.user = user;
+    req.user = {
+      ...user.toObject(),
+      _id: user._id.toString(),   
+    };
+
     next();
   });
 

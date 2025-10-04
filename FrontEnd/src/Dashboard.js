@@ -1,6 +1,6 @@
 import React from "react";
 import "./Dashboard.css";
-import { FaUserCircle } from "react-icons/fa"; // profile icon
+import { FaUserCircle } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {

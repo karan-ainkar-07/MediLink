@@ -22,23 +22,15 @@ const CouponSchema=new Schema(
             type:String,
             enum:["Used","Cancelled","Active"]
         },
-        timeTaken:
-        {
-            type:Number,
-            required:false,
-        },
         issuedAt:
         {
             type:Date,
             required:true,
         },
-        usedAt:
-        {
-            type:Date,
-        },
         partOfQueue:
         {
             type:mongoose.Schema.Types.ObjectId,
+            ref:"Queue",
             required:true,
         }
     },
@@ -46,5 +38,11 @@ const CouponSchema=new Schema(
         timestamps:true,
     }
 )
+
+CouponSchema.index(
+    {createdAt:1},
+    {expireAfterSeconds:0,partialFilterExpression:{Status: { $in:["Used","Cancelled"] } }}
+)
+
 
 export const Coupon= mongoose.model("Coupon",CouponSchema);

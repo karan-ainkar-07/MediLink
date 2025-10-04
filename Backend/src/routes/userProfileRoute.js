@@ -5,8 +5,8 @@ import { BookAppointment, getCouponStats, getDoctor, getDoctors } from "../contr
 const router=Router();
 
 router.route('/get-doctors').get(getDoctors);
-router.route('get-coupoun-stats').get(getCouponStats);
-router.route('book-appointment').post(verifyJWT("User"),BookAppointment);
+router.route('/get-coupon-stats').get(getCouponStats);
+router.route('/book-appointment').post(verifyJWT("User"),BookAppointment);
 router.route('/get-doctor').get(getDoctor);
 
 export default router;
