@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
 import {Clinic} from "../models/Clinic.model.js"
-import { Coupon } from "../models/coupon.model.js";
 import {Appointment} from "../models/appointment.model.js"
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -133,26 +132,19 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       // get the total coupons from queue
       const { totalTokens, doctor, clinic } = queue;
     
+      // increment the queue token count
+      const couponNumber = totalTokens + 1;
+
       // create a new appointment
       const appointment = await Appointment.create({
         patient: userID,
         doctor: doctor,
         clinic: clinic,
-        date: new Date(),
-      });
-    
-      // increment the queue token count
-      const couponNumber = totalTokens + 1;
-    
-      // create a new coupon linked to the appointment
-      const coupon = await Coupon.create({
-        appointment: appointment._id,
         couponNumber: couponNumber,
-        Status: "Active",
-        issuedAt: new Date(),
+        date: new Date(),
         partOfQueue: queue._id,
       });
-    
+        
       // update the queue totalTokens
       const queueDoc = await Queue.findById(queue._id);
       queueDoc.totalTokens += 1;
@@ -161,16 +153,42 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     
       // return the coupon as response
       return res.status(200).json(
-        new ApiResponse(200, coupon, "Appointment booked successfully")
+        new ApiResponse(200, appointment, "Appointment booked successfully")
       );
     });
 
+    const viewAppointments =asyncHandler( async(req,res) =>{
 
+      const userId=req.user._id;
+      if(!userId)
+      {
+        throw new ApiError(401,"Unable to get the UserId");
+      }
 
+      const appointments = await Appointment.find({patient:userId});
+
+      if(!appointments)
+      {
+        throw new ApiError(403,"Unable to find Appoitments");
+      }
+
+      //get the coupon stats of each of the clinic
+
+      //get the coupon number of the patient for each of the clinic
+
+      //make a list of objects for each appointment containing every info
+
+      return res
+              .status(200)
+              .json(
+                new ApiResponse(200,{appointments},"Appointments fetched successfully")
+              )
+    });
 
 export  {
     getDoctors,
     getCouponStats,
     BookAppointment,
     getDoctor,
+    viewAppointments,
 }
