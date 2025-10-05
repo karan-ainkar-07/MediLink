@@ -8,5 +8,5 @@ router.route('/get-doctors').get(getDoctors);
 router.route('/get-coupon-stats').get(getCouponStats);
 router.route('/book-appointment').post(verifyJWT("User"),BookAppointment);
 router.route('/get-doctor').get(getDoctor);
-router.route('/view-appointments').get(viewAppointments);
+router.route('/view-appointments').get(verifyJWT("User"),viewAppointments);
 export default router;

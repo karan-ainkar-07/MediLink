@@ -10,6 +10,7 @@ import VerifyOTP from "./verifyOtp";
 import ClinicSignup from "./ClinicRegister";
 import LoginClinic from "./clinicLogin";
 import DoctorRegistration from "./doctorSingup";
+import ViewAppointments from "./viewAppointments";
 function App() {
   return (
     <Router>
@@ -23,6 +24,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/symptom" element={<SymptomsChecker />} />
+        <Route path="/viewAppointments" element={<ViewAppointments/>} />
         <Route path="/bookingPanel/:doctorId" element={<BookingPanel />} />
       </Routes>
     </Router>

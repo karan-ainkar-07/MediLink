@@ -165,18 +165,18 @@ import { ApiResponse } from "../utils/ApiResponse.js";
         throw new ApiError(401,"Unable to get the UserId");
       }
 
-      const appointments = await Appointment.find({patient:userId});
+      //make a list of objects for each appointment containing every info
+      const appointments = await Appointment.find({patient:userId}).populate(
+        "partOfQueue",
+        ["status","currentToken"]
+      );
 
       if(!appointments)
       {
         throw new ApiError(403,"Unable to find Appoitments");
       }
 
-      //get the coupon stats of each of the clinic
 
-      //get the coupon number of the patient for each of the clinic
-
-      //make a list of objects for each appointment containing every info
 
       return res
               .status(200)

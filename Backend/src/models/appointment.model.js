@@ -11,22 +11,22 @@ const AppointmentSchema = new Schema(
       enum: ["Booked", "Completed", "Cancelled"], 
       default: "Booked" ,
     },
-        couponNumber:
-        {
-            type:Number,
-            required:true,
-        },
-        expectedTime:
-        {
-            type:Number,
-            required:false,
-        },
-        partOfQueue:
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Queue",
-            required:true,
-        },
+    couponNumber:
+    {
+        type:Number,
+        required:true,
+    },
+    expectedTime:
+    {
+        type:Number,
+        required:false,
+    },
+    partOfQueue:
+    {
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Queue",
+        required:true,
+    },
     prescription:
     {
       type:mongoose.Schema.Types.ObjectId,
