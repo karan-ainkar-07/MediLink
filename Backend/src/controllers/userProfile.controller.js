@@ -1,5 +1,4 @@
 import { UserInfo } from "../models/userInfo.model.js";
-import mongoose from "mongoose";
 import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
 import {Clinic} from "../models/Clinic.model.js"
@@ -135,14 +134,39 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       // increment the queue token count
       const couponNumber = totalTokens + 1;
 
+      //find clinic from the clinicId
+      const clinicObj=Clinic.findById({clinic})
+      if(!clinicObj)
+      {
+        throw new ApiError(404,`No clinic with Id ${clinic} found`);
+      }
+
+      //set the end Date 
+      const date=new Date()
+      const dayIndex= date.getDay();
+
+      const weekDays = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+      const dayName = weekDays[dayIndex];
+
+      let endDate;
+      if(clinicObj.timming)
+      {
+        const clinicTimming=clinicObj.timming.find(t => t.weekDay===dayName)
+        
+        const [hour,min]= clinicTimming.end.split(":").map(Number);
+        endDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, min, 0);
+      }
+      endDate=new Date(date.getFullYear(), date.getMonth(), date.getDate(), 21, 0, 0);
+
       // create a new appointment
       const appointment = await Appointment.create({
         patient: userID,
         doctor: doctor,
         clinic: clinic,
         couponNumber: couponNumber,
-        date: new Date(),
+        date: date,
         partOfQueue: queue._id,
+        expiry: endDate,
       });
         
       // update the queue totalTokens

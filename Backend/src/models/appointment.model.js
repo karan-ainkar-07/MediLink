@@ -32,6 +32,11 @@ const AppointmentSchema = new Schema(
       type:mongoose.Schema.Types.ObjectId,
       ref:"prescription",
     },
+    expiry:
+    {
+      type:Date,
+      required:true,
+    }
     },
  { timestamps: true }
 );

@@ -3,10 +3,15 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
 const timingSchema = new Schema({
-  week: {
+  weekDay: {
     type: String,
     enum: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"],
     required: true
+  },
+  isClosed:{
+    type:Boolean,
+    required:true,
+    default:false,
   },
   start: {
     type: String, 
