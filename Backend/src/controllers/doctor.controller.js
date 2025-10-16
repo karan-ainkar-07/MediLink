@@ -5,8 +5,10 @@ import { Appointment } from "../models/appointment.model.js";
 import {Queue} from "../models/queue.model.js"
 import {Prescription} from "../models/prescription.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { sendEmail } from "../utils/Email.js";
 import jwt from "jsonwebtoken"
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { Clinic } from "../models/Clinic.model.js";
 
 const generateAccessAndRefreshTokens = async(user) => {
     const accessToken = user.generateAccessToken();
@@ -241,138 +243,235 @@ const resetPassword = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200,"Password changes successfully"));
 });
 
-// const pauseQueue = asyncHandler(async (req, res) => {
-//     const { Doctor } = req.query;
+const startClinic =asyncHandler(async (req,res) =>{
+    //get the Clinic from the query
+    const {clinic} =req.query
 
-//     const QueueDoc = await Queue.findOneAndUpdate(
-//         { Doctor },
-//         { $set: { status: "Stopped" } },
-//         { new: true }
-//     );
+    //check if the Clinic is not empty
+    if(!clinic)
+    {
+        throw new ApiError(404,"No Clinic input");
+    }
 
-//     if (!QueueDoc) {
-//         throw new ApiError(400, "Queue doesn't exist");
-//     }
+    //change the status to Open if closed 
+    const closeClinic= await Clinic.findOneAndUpdate({_id:clinic},{$set:{ status: "Open"}});
 
-//     res.status(200).json(
-//         new ApiResponse(
-//             200,
-//             QueueDoc,
-//             "Queue paused successfully",
-//         )
+    if(!closeClinic)
+    {
+        throw new ApiError("Unable to Update the status ");
+    }
 
-//     );
-// });
+    closeClinic.password=undefined;
 
-// const resumeQueue = asyncHandler(async (req, res) => {
-//     const { Doctor } = req.query;
+    res.status(200)
+        .json(
+            new ApiResponse(200,closeClinic,"Status Changed SuccessFully")
+        );
 
-//     const QueueDoc = await Queue.findOneAndUpdate(
-//         { Doctor },
-//         { $set: { status: "In-Progress" } },
-//         { new: true }
-//     );
+})
 
-//     if (!QueueDoc) {
-//         throw new ApiError(400, "Queue doesn't exist");
-//     }
+const closeClinic =asyncHandler(async (req,res) =>
+{
+    //get the Clinic from the query
+    const {clinic} =req.query
 
-//     res.status(200).json(
-//         new ApiResponse(
-//             200,
-//             QueueDoc,
-//             "Queue Resumed successfully",
-//         )
+    //check if the Clinic is not empty
+    if(!clinic)
+    {
+        throw new ApiError(404,"No Clinic input");
+    }
 
-//     );
-// });
+    //change the status to Open if closed 
+    const closeClinic= await Clinic.findOneAndUpdate({_id:clinic._id},{$set:{ status: "Closed"}});
 
-// const nextCoupon = asyncHandler(async (req, res) => {
-//     // 1. Get the latest coupon
-//     const {Doctor,Patient}= req.query;
+    if(!closeClinic)
+    {
+        throw new ApiError("Unable to Update the status ");
+    }
 
-//     // 2. Get the latest active appointment of the doctor
-//     const latestAppointment = await Appointment.findOne({
-//         Doctor,
-//         Patient,
-//         Status: "Booked"
-//     }).sort({ createdAt: -1 });
+    //return response
+    closeClinic.password=undefined;
 
-//     if (!latestAppointment) {
-//         throw new ApiError(404, "No active appointments found for the doctor");
-//     }
+    res.status(200)
+        .json(
+            new ApiResponse(200,closeClinic,"Status Changed SuccessFully")
+        );
+})
 
-//     const latestCoupon = await Coupon.findOne({appointment:latestAppointment._id,Status:"Active"}).sort({ createdAt: -1 });
+const pauseQueue = asyncHandler(async (req, res) => {
+    const DoctorId  = req.user._id;
 
-//     if (!latestCoupon) {
-//         throw new ApiError(404, "No active coupons found");
-//     }
+    const QueueDoc = await Queue.findOneAndUpdate(
+        { doctor:DoctorId },
+        { $set: { status: "Stopped" } },
+        { new: true }
+    );
 
-//     latestCoupon.Status="Used";
+    if (!QueueDoc) {
+        throw new ApiError(400, "Queue doesn't exist");
+    }
 
-//     // 3. Update appointment status
-//     latestAppointment.status = "completed";
-//     latestAppointment.used = true;
-//     const isSaved=await latestAppointment.save();
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            QueueDoc,
+            "Queue paused successfully",
+        )
+
+    );
+});
+
+const resumeQueue = asyncHandler(async (req, res) => {
+    const DoctorId  = req.user._id;
+
+    const QueueDoc = await Queue.findOneAndUpdate(
+        { doctor:DoctorId },
+        { $set: { status: "In-Progress" } },
+        { new: true }
+    );
+
+    if (!QueueDoc) {
+        throw new ApiError(400, "Queue doesn't exist");
+    }
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            QueueDoc,
+            "Queue Resumed successfully",
+        )
+
+    );
+});
+
+const viewAppointments= asyncHandler(async (req,res)=>{
+    //const get the doctorId, from the cookies
+    const doctorId=req.user._id;
+
+    if(!doctorId)
+    {
+        throw new ApiError(402,"UnAutorized access");
+    }
+
+    //get the queue of the day for the doctor 
+    const queue = await Queue.findOne({doctor:doctorId});
+    if(!queue)
+    {
+        res.status(200)
+            .json(
+                new ApiResponse(200,{},"No Appointments Today")
+            );
+    }
+
+    //get the appointments only the booked and which are not completed yet using the queue id 
+    const appointments = await Appointment.find({partOfQueue:queue._id, status:"Booked"}).sort({createdAt:1});
     
-//     if(isSaved)
-//         await latestCoupon.save();
+    //return the appointments array 
+    res.status(200)
+        .json(
+            new ApiResponse(200,appointments,"Appointments fetched Successfully")
+        );
+})
 
-//     // 4. Send response
-//     res.status(200).json(
-//         new ApiResponse(200,
-//             {
-//                 latestCoupon,
-//                 latestAppointment
-//             },
-//             "queue moved infront"
-//         )
-//     );
-// });
+const nextCoupon = asyncHandler(async (req, res) => {
+    //  Get the latest coupon
+    const {DoctorId}= req.user._id;
 
-// const saveAndSendPrescription = asyncHandler(async(req,res)=>
-// {
-//     //get the patient and user from the req.query
-//     const {patient,Doctor} = req.query;
+    const queue= await Queue.findOneAndUpdate({doctor:DoctorId},{$inc:{currentToken:1}},{new:true})
 
-//     //get the Prescription form the body
-//     const {diagnoses,medicines,notes}=req.body;
+    const nextPatientArray=await Appointment.find({doctor:DoctorId,partOfQueue:queue._id, isPresent:true, status:"Booked" }).sort({createdAt:1});
 
-//     const appointment=Appointment.findOne({patient,doctor:Doctor}).sort({createdAt:-1});
+    if(!nextPatientArray && !nextPatientArray[0])
+    {
+        throw new ApiError(404,"No active Appointment found");
+    }
 
-//     if(!diagnoses || !diagnoses[0] || !medicines || !medicines[0])
-//     {
-//         throw new ApiError(
-//             402,"Missing diagnosis and medicines"
-//         )
-//     }
+    const absentAppointments = await Appointment.find({doctor:DoctorId,partOfQueue:queue._id, isPresent:false , status:"Booked"});
 
-//     const duration = medicines.map((medicine) => medicine.duration); 
-//     const maxDuration = Math.max(...duration); 
-//     const endDate = new Date(Date.now() + maxDuration * 24 * 60 * 60 * 1000);
+    await Appointment.updateMany({doctor:DoctorId,partOfQueue:queue._id, isPresent:false , status:"Booked"});
 
-//     //save the prescription
-//     const prescription=await Prescription.create(
-//         {
-//             appointment:appointment._id,
-//             notes:(notes? notes: ""),
-//             diagnoses,
-//             medicines,
-//             endDate,
-//             startDate :new Date(Date.now()),
-//         }
-//     )
+    //to be done
+    absentAppointments.forEach(()=>{
+        sendEmail();
+    })
 
-//     res
-//         .status(200)
-//         .json(
-//             new ApiResponse(
-//                 200,
-//                 prescription,
-//                 "Prescription created successfully"
-//             )
-//         )
-// })
+
+    const nextPatient=nextPatientArray[0];
+
+    //set the appointment starting time 
+    nextPatient.startTime=new Date();
+
+    // to be done
+    sendNotification(nextPatient);
+
+    //  Send response
+    res.status(200).json(
+        new ApiResponse(200,
+            {
+                queue,
+                nextPatient,
+            },
+            "queue moved infront"
+        )
+    );
+});
+
+const saveAndSendPrescription = asyncHandler(async(req,res)=>{
+    //get the patient and user from the req.query
+    const doctorId =req.user._id;
+    const {patientId} = req.query;
+
+    //get the Prescription form the body
+    const {diagnoses,medicines,notes}=req.body;
+
+    const appointment=await Appointment.findOne({patient:patientId,doctor:doctorId , status:{ $in:["Booked","Skipped"]}}).sort({createdAt:-1});
+
+    const queue = Queue.findOne({_id:appointment.partOfQueue});
+    
+    const nowTime= new Date();
+    const timeTakenSec=(nowTime-appointment.startTime)/1000;
+    queue.timeTaken.push(timeTakenSec);
+    await queue.save();
+
+    //change the status to completed
+    appointment.status="Completed";
+    await appointment.save();
+
+    if(!diagnoses || !diagnoses[0] || !medicines || !medicines[0])
+    {
+
+        new ApiResponse(200,appointment,"Appointment Completed successfully");
+    }
+    const duration = medicines.map((medicine) => medicine.duration); 
+    const maxDuration = Math.max(...duration); 
+    const endDate = new Date(Date.now() + maxDuration * 24 * 60 * 60 * 1000);
+
+    //save the prescription
+    const prescription=await Prescription.create(
+        {
+            appointment:appointment._id,
+            notes:(notes? notes: ""),
+            diagnoses,
+            medicines,
+            endDate,
+            startDate :new Date(Date.now()),
+        }
+    )
+
+    res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                prescription,
+                "Prescription created successfully"
+            )
+        )
+}) 
+
+const saveAndSendInvoice = asyncHandler( async (req,res)=>{
+
+})
 
 export {
     registerUser,
@@ -380,4 +479,11 @@ export {
     logOut,
     refreshAccessToken,
     resetPassword,
+    resumeQueue,
+    startClinic,
+    closeClinic,
+    pauseQueue,
+    viewAppointments,
+    nextCoupon,
+    saveAndSendPrescription,
 }

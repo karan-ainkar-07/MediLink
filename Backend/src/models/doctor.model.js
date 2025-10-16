@@ -64,6 +64,11 @@ const doctorSchema = new Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:"Clinic",
             required:true,
+        },
+        AppointmentTime: //average appointment time in seconds
+        {
+            type:Number,
+            required:false,
         }
     },
     {

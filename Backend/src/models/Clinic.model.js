@@ -5,13 +5,8 @@ import jwt from "jsonwebtoken"
 const timingSchema = new Schema({
   weekDay: {
     type: String,
-    enum: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY","SUNDAY"],
+    enum: ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY",],
     required: true
-  },
-  isClosed:{
-    type:Boolean,
-    required:true,
-    default:false,
   },
   start: {
     type: String, 
@@ -81,7 +76,7 @@ const ClinicSchema=new Schema(
         {
             type:String,
             enum:["Open","Closed"],
-            default:"Open",
+            default:"Closed",
         },
         timing:
         {

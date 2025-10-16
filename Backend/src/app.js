@@ -1,12 +1,10 @@
 import dotenv from "dotenv";
 await dotenv.config(); 
-console.log("done");
 
 import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import connectDB from './config/DB.js'
-
 
 const app = express()
 
@@ -21,6 +19,7 @@ app.use(express.static("public"))
 app.use(cookieParser())
 
 await connectDB();
+
 
 // Routing 
 import userRouter from "./routes/userRoute.js"

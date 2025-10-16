@@ -1,4 +1,4 @@
-import { UserInfo } from "../models/userInfo.model.js";
+import { UserInfo, UserInfo } from "../models/userInfo.model.js";
 import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
 import {Clinic} from "../models/Clinic.model.js"
@@ -9,7 +9,77 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 //Add, View, Edit Health Details
 
-//See E-Prescriptions and Invoice (history of booking details)
+    //Create new UserInfo document
+    const createUserInfo= asyncHandler(async (req,res) =>{
+      const userId=req.user?._id;
+      const {form}=req.body;
+
+      if(!userId)
+      {
+        throw new ApiError(401,"UnAutorized Access");
+      }
+      if(!form)
+      {
+        throw new ApiError(402,"Empty form");
+      }
+
+      form.user=userId;
+      const userInfo= await UserInfo.create(form);
+
+      if(!userInfo)
+      {
+        throw new ApiError(401,"Cant Create UserInfo document");
+      }
+
+      res.status(201)
+        .json(
+          new ApiResponse(201,userInfo,"UserInfo created SuccessFully")
+        )
+    })
+
+    //const update UserInfo
+    const updateUserInfo = asyncHandler(async (req,res) =>{
+      const userId =req.user?._id;
+      const {form} =req.body;
+
+      if(!userId)
+      {
+        throw new ApiError(401,"UnAuthorized Access");
+      }
+
+      if(!form)
+      {
+        throw new ApiError(402,"Empty Form");
+      }
+
+      updatedInfo = await UserInfo.findOneAndUpdate({user:userId},{form});
+
+      if(!updatedInfo)
+      {
+        throw new ApiError(404,"No User Info found");
+      }
+
+      res.status(201)
+        .json(
+          new ApiResponse(201,updatedInfo,"Info updated successfully")
+        )
+    })
+
+    const getUserInfo =asyncHandler( async (req,res) =>{
+        const userId =req.user._id;
+
+        const Info= await UserInfo.findOne({user:userId});
+
+        if(!Info)
+        {
+          throw new ApiError(404,"No UserInfo found , create one");
+        }
+        
+        res.status(200)
+          .json(
+            new ApiResponse(200,Info,"Info fetched successfully")
+          )
+    })
 
 //Book Doctor (coupon management)
 
@@ -116,7 +186,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       );
     });
 
-
     //Book the slot
     const BookAppointment = asyncHandler(async (req, res) => {
       // get the queue and userID from query
@@ -129,34 +198,27 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       }
     
       // get the total coupons from queue
-      const { totalTokens, doctor, clinic } = queue;
+      const { totalTokens, doctor, clinic, currentToken } = queue;
     
       // increment the queue token count
       const couponNumber = totalTokens + 1;
 
       //find clinic from the clinicId
-      const clinicObj=Clinic.findById({clinic})
-      if(!clinicObj)
+      const doctorObj=await Doctor.findById({doctor})
+      if(!doctorObj)
       {
-        throw new ApiError(404,`No clinic with Id ${clinic} found`);
+        throw new ApiError(404,`No clinic with Id ${doctor} found`);
       }
 
-      //set the end Date 
-      const date=new Date()
-      const dayIndex= date.getDay();
-
-      const weekDays = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
-      const dayName = weekDays[dayIndex];
-
-      let endDate;
-      if(clinicObj.timming)
+      const averageTime=doctorObj.AppointmentTime;
+      let expectedDate=null;
+      if(averageTime)
       {
-        const clinicTimming=clinicObj.timming.find(t => t.weekDay===dayName)
-        
-        const [hour,min]= clinicTimming.end.split(":").map(Number);
-        endDate = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, min, 0);
+         const expectedTime=averageTime * (totalTokens-currentToken);
+         expectedDate= new Date(Date.now() + expectedTime * 1000);
       }
-      endDate=new Date(date.getFullYear(), date.getMonth(), date.getDate(), 21, 0, 0);
+      
+      const date=new Date();
 
       // create a new appointment
       const appointment = await Appointment.create({
@@ -166,7 +228,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
         couponNumber: couponNumber,
         date: date,
         partOfQueue: queue._id,
-        expiry: endDate,
+        expectedTime: expectedDate,
       });
         
       // update the queue totalTokens
@@ -181,6 +243,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       );
     });
 
+    //View Appointments
     const viewAppointments =asyncHandler( async(req,res) =>{
 
       const userId=req.user._id;

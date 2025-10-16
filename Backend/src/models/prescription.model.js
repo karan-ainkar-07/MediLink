@@ -17,10 +17,14 @@ const prescriptionSchema = new Schema(
             medicines: [
               {
                 name: { type: String, required: true },         
-                dosage: { type: String, required: true },       
-                frequency: { type: String, required: true },    
-                duration: { type: Number, required: true },     
-                instructions: { type: String }                  
+                dosage: { type: Number, required: true }, 
+                frequency:
+                {
+                  type:[String], 
+                  enum:["EarlyMorning","Morning","Noon","Afternoon","Evening","Night"],
+                  required:true,
+                },
+                duration: { type: Number, required: true },      
               }
             ],
             isNotificationsOn:

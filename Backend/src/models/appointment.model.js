@@ -8,7 +8,7 @@ const AppointmentSchema = new Schema(
     date: { type: Date, required: true },
     status: { 
       type: String, 
-      enum: ["Booked", "Completed", "Cancelled"], 
+      enum: ["Booked", "Completed", "Cancelled",], 
       default: "Booked" ,
     },
     couponNumber:
@@ -21,6 +21,16 @@ const AppointmentSchema = new Schema(
         type:Number,
         required:false,
     },
+    startTime:
+    {
+      type:Date,
+      required:false,
+    },
+    isPresent:
+    {
+      type:Boolean,
+      default:false,
+    },
     partOfQueue:
     {
         type:mongoose.Schema.Types.ObjectId,
@@ -32,11 +42,6 @@ const AppointmentSchema = new Schema(
       type:mongoose.Schema.Types.ObjectId,
       ref:"prescription",
     },
-    expiry:
-    {
-      type:Date,
-      required:true,
-    }
     },
  { timestamps: true }
 );

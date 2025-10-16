@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./Dashboard";
+import DashboardDoc from "./DoctorDashboard";
 import Auth from "./Auth"
 import Appointment from "./Appointment";
 import SymptomsChecker from "./SymptomChecker";
@@ -22,6 +23,7 @@ function App() {
         <Route path="/signUp" element={<SignUp/>}/>
         <Route path="/verifyOTP" element={<VerifyOTP/>}/>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/doctorDashBoard" element={<DashboardDoc/>}/>
         <Route path="/appointment" element={<Appointment />} />
         <Route path="/symptom" element={<SymptomsChecker />} />
         <Route path="/viewAppointments" element={<ViewAppointments/>} />
