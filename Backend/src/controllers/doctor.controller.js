@@ -391,18 +391,18 @@ const nextCoupon = asyncHandler(async (req, res) => {
     await Appointment.updateMany({doctor:DoctorId,partOfQueue:queue._id, isPresent:false , status:"Booked"});
 
     //to be done
-    absentAppointments.forEach(()=>{
-        sendEmail();
-    })
+    // absentAppointments.forEach(()=>{
+    //     sendEmail();
+    // })
 
 
     const nextPatient=nextPatientArray[0];
 
-    //set the appointment starting time 
+    //set the appointment starting time
     nextPatient.startTime=new Date();
 
     // to be done
-    sendNotification(nextPatient);
+    // sendNotification(nextPatient);
 
     //  Send response
     res.status(200).json(
