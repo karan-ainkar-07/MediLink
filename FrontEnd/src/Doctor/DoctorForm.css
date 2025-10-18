@@ -1,0 +1,98 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #d0e6ff, #ffffff);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.form-container {
+  background: linear-gradient(145deg, #ffffff, #e6f0ff);
+  padding: 30px 40px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  width: 100%;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.form-title {
+  text-align: center;
+  color: #004aad;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #003366;
+}
+
+.input-group input,
+.input-group textarea {
+  padding: 10px 15px;
+  border: 1px solid #aac4ff;
+  border-radius: 8px;
+  font-size: 1em;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: #0073ff;
+  box-shadow: 0 0 8px rgba(0, 115, 255, 0.3);
+}
+
+.medicine-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.medicine-input {
+  flex: 1 1 200px;
+  padding: 8px 12px;
+  border: 1px solid #aac4ff;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.medicine-input:focus {
+  outline: none;
+  border-color: #0073ff;
+  box-shadow: 0 0 8px rgba(0, 115, 255, 0.3);
+}
+
+.add-btn,
+.send-btn {
+  background: linear-gradient(90deg, #4dabff, #1e7cff);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  margin-top: 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-btn:hover,
+.send-btn:hover {
+  background: linear-gradient(90deg, #1e7cff, #4dabff);
+  transform: scale(1.05);
+}

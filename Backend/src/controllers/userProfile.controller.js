@@ -243,6 +243,30 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       );
     });
 
+    //const toggel is Present in the clinic 
+    const isPresent = asyncHandler(async (req, res) => {
+      const userId = req.user._id;
+      const { appointmentId } = req.query;
+    
+      if (!appointmentId) {
+        throw new ApiError(402, "No appointmentId provided");
+      }
+    
+      const appointment = await Appointment.findOne({ _id: appointmentId,   patient:  userId });
+      if (!appointment) {
+        throw new ApiError(404, "Appointment not found");
+      }
+    
+      appointment.isPresent = !appointment.isPresent;
+      await appointment.save();
+    
+      res.status(200)
+          .json(
+            new ApiResponse(200,appointment,"Appointment is present updated successfully")
+      );
+    });
+
+
     //View Appointments
     const viewAppointments =asyncHandler( async(req,res) =>{
 
@@ -278,4 +302,8 @@ export  {
     BookAppointment,
     getDoctor,
     viewAppointments,
+    isPresent,
+    createUserInfo,
+    updateUserInfo,
+    getUserInfo
 }

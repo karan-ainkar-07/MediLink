@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { backendUrl } from "./constants";
+import { backendUrl } from "../constants";
 
 export default function ClinicSignup() {
   const [formData, setFormData] = useState({

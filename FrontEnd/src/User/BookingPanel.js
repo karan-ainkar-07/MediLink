@@ -3,7 +3,7 @@ import { Calendar, MapPin, User } from 'lucide-react';
 import './bookingPanel.css';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { backendUrl } from './constants';
+import { backendUrl } from '../constants';
 
 export default function BookingPanel() {
   const {doctorId} = useParams();

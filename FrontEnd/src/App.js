@@ -4,7 +4,7 @@ import Dashboard from "./Dashboard";
 import DashboardDoc from "./DoctorDashboard";
 import Auth from "./Auth"
 import Appointment from "./Appointment";
-import SymptomsChecker from "./SymptomChecker";
+import SymptomsChecker from "./User/SymptomChecker";
 import BookingPanel from "./BookingPanel";
 import SignUp from "./userSignUp";
 import VerifyOTP from "./verifyOtp";

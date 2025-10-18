@@ -388,7 +388,7 @@ const nextCoupon = asyncHandler(async (req, res) => {
 
     const absentAppointments = await Appointment.find({doctor:DoctorId,partOfQueue:queue._id, isPresent:false , status:"Booked"});
 
-    await Appointment.updateMany({doctor:DoctorId,partOfQueue:queue._id, isPresent:false , status:"Booked"});
+    await Appointment.updateMany({doctor:DoctorId,partOfQueue:queue._id, isPresent:false , status:"Booked"},{status:"Cancelled"});
 
     //to be done
     // absentAppointments.forEach(()=>{

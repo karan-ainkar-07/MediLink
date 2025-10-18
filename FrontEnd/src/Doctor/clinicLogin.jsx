@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {useNavigate} from "react-router-dom"
-import {backendUrl} from "./constants.js";
+import {backendUrl} from "../constants.js";
 import axios from "axios";
 
 export default function LoginClinic() {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./Appointment.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { backendUrl } from "./constants";
+import { backendUrl } from "../constants";
 
 export default function Appointment() {
   const navigate = useNavigate();
