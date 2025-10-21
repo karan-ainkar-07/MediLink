@@ -293,6 +293,19 @@ const resetPassword = asyncHandler(async (req, res) => {
     });
 });
 
+const getCurrentUser = asyncHandler( async (req,res) =>{
+    const user=req.user;
+    if(!user)
+    {
+        throw new ApiError(401,"UnAuthorized Access");
+    }
+
+    res.status(201)
+        .json(
+            new ApiResponse(201,user,"User Fetched Successfully")
+        )
+})
+
 
 export {
     registerUser,
@@ -301,5 +314,6 @@ export {
     refreshAccessToken,
     resetPassword,
     verifyEmail,
+    getCurrentUser,
 };
 

@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { backendUrl } from "./constants";
+import { backendUrl } from "../constants";
 
 const DoctorRegistration = () => {
   const [search, setSearch] = useState({ name: "", city: "" });
   const [clinics, setClinics] = useState([]);
   const [formData, setFormData] = useState({
+    name: "", // changed from doctorName
     email: "",
     mobileNo: "",
     password: "",
     education: [{ degree: "", university: "", year: "" }],
     specialization: "General Practitioner",
-    profileImage: null, // store file object
+    profileImage: null,
     clinic: "",
   });
 
-  // Search clinics by name or city
   const handleSearch = async () => {
     try {
       const query = `?name=${search.name}&city=${search.city}`;
@@ -27,14 +27,13 @@ const DoctorRegistration = () => {
     }
   };
 
-  // Handle form input change
   const handleChange = (e, index, field) => {
     if (field === "education") {
       const newEducation = [...formData.education];
       newEducation[index][e.target.name] = e.target.value;
       setFormData({ ...formData, education: newEducation });
     } else if (e.target.name === "profileImage") {
-      setFormData({ ...formData, profileImage: e.target.files[0] }); // file
+      setFormData({ ...formData, profileImage: e.target.files[0] });
     } else {
       setFormData({ ...formData, [e.target.name]: e.target.value });
     }
@@ -51,6 +50,7 @@ const DoctorRegistration = () => {
     e.preventDefault();
     try {
       const submitData = new FormData();
+      submitData.append("name", formData.name); // changed here
       submitData.append("email", formData.email);
       submitData.append("mobileNo", formData.mobileNo);
       submitData.append("password", formData.password);
@@ -78,7 +78,6 @@ const DoctorRegistration = () => {
     <div className="container mx-auto p-4 max-w-lg">
       <h2 className="text-2xl font-bold mb-4">Doctor Registration</h2>
 
-      {/* Search clinics */}
       <div className="flex gap-2 mb-4">
         <input
           type="text"
@@ -104,7 +103,21 @@ const DoctorRegistration = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Clinic Selection Dropdown */}
+
+        {/* Name */}
+        <div>
+          <label>Name</label>
+          <input
+            type="text"
+            name="name" // changed from doctorName
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="border p-2 w-full"
+          />
+        </div>
+
+        {/* Clinic Selection */}
         <div>
           <label>Select Clinic</label>
           <select

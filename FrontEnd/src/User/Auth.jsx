@@ -21,6 +21,7 @@ export default function AuthUI({ isSignUpActive, onClose }) {
         password,
       }, { withCredentials: true });
 
+      console.log(role);
       if (response.status >= 200 && response.status < 300) {
         if (role === "user") {
           if (response.data.data?.requiresVerification) {
@@ -30,6 +31,7 @@ export default function AuthUI({ isSignUpActive, onClose }) {
           }
         } else {
           alert("Doctor logged in");
+          navigate("/doctorDashboard");
         }
       } else {
         setError(response.data.message || "Login failed");

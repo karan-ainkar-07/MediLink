@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { User } from "../models/user.model.js";
@@ -46,6 +46,7 @@ const VerifyJWT = (role) =>
     );
 
     if (!user) {
+      console.log(decodedJWT)
       throw new ApiError(401, "Invalid Access Token: User not found");
     }
 

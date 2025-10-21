@@ -11,6 +11,8 @@ import {
     viewAppointments,
     nextCoupon,
     saveAndSendPrescription,} from '../controllers/doctor.controller.js'
+
+import { getCurrentUser } from '../controllers/user.controller.js';
 import {Router} from "express"
 import VerifyJWT from "../middleware/verifyJWT.js";
 import {upload} from "../middleware/multer.js"
@@ -28,6 +30,6 @@ router.route('/save-prescription').post(VerifyJWT("Doctor"), saveAndSendPrescrip
 router.route('/view-appointments').get(VerifyJWT("Doctor"), viewAppointments);
 router.route('/start-clinic').patch(VerifyJWT("Doctor"), startClinic);
 router.route('/close-clinic').patch(VerifyJWT("Doctor"), closeClinic);
-
+router.route('/get-current-user').get(VerifyJWT("Doctor"),getCurrentUser);
 
 export default router;

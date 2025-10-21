@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-import { backendUrl } from "./constants";
+import { backendUrl } from "../constants";
 
 const VerifyOTP = () => {
   const location = useLocation();

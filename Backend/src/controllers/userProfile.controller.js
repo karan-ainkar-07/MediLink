@@ -1,4 +1,4 @@
-import { UserInfo, UserInfo } from "../models/userInfo.model.js";
+import { UserInfo } from "../models/userInfo.model.js";
 import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
 import {Clinic} from "../models/Clinic.model.js"
@@ -94,12 +94,12 @@ import { ApiResponse } from "../utils/ApiResponse.js";
         clinicIds = clinics.map(c => c._id);
         if (clinicIds.length === 0) {
           return res.status(200).json(
-            new ApiResponse(200, { data: [] }, "No doctors found in this city")
+            new ApiResponse(200, { docList: [] }, "No doctors found in this city")
           );
         }
       }
     
-      // build filters
+       // build filters
       const filter = {};
       if (specialization) 
           filter.specialization = specialization;
@@ -110,7 +110,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       // fetch doctors
       const doctors = await Doctor.find(filter).populate(
         "clinic",
-        "name address location"
+        "name addresslocation"
       );
     
       return res.status(200).json(
@@ -204,7 +204,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       const couponNumber = totalTokens + 1;
 
       //find clinic from the clinicId
-      const doctorObj=await Doctor.findById({doctor})
+      const doctorObj=await Doctor.findById(doctor)
       if(!doctorObj)
       {
         throw new ApiError(404,`No clinic with Id ${doctor} found`);
@@ -266,7 +266,6 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       );
     });
 
-
     //View Appointments
     const viewAppointments =asyncHandler( async(req,res) =>{
 
@@ -277,9 +276,55 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       }
 
       //make a list of objects for each appointment containing every info
-      const appointments = await Appointment.find({patient:userId}).populate(
+      const appointments = await Appointment.find({patient:userId, status:"Booked"})
+      .populate(
         "partOfQueue",
         ["status","currentToken"]
+      )
+      .populate(
+        "clinic",
+        ["name","logo","mobileNo","address","email"]
+      )
+      .populate(
+        "doctor",
+        ["name","profileImage","specialization","rate"]
+      )
+      ;
+
+      if(!appointments)
+      {
+        throw new ApiError(403,"Unable to find Appoitments");
+      }
+
+
+
+      return res
+              .status(200)
+              .json(
+                new ApiResponse(200,{appointments},"Appointments fetched successfully")
+              )
+    });
+
+    //past appointments 
+    const pastAppointments =asyncHandler( async(req,res) =>{
+
+      const userId=req.user._id;
+      if(!userId)
+      {
+        throw new ApiError(401,"Unable to get the UserId");
+      }
+
+      //make a list of objects for each appointment containing every info
+      const appointments = await Appointment.find({patient:userId,status:{
+        $in:["Completed","Cancelled"],
+      }})
+      .populate(
+        "clinic",
+        ["name","logo","mobileNo","address","email"]
+      )
+      .populate(
+        "doctor",
+        ["name","profileImage","specialization","rate"]
       );
 
       if(!appointments)
@@ -305,5 +350,6 @@ export  {
     isPresent,
     createUserInfo,
     updateUserInfo,
-    getUserInfo
+    getUserInfo,
+    pastAppointments,
 }

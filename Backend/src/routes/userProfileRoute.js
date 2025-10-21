@@ -9,7 +9,8 @@ import {
     isPresent,
     createUserInfo,
     updateUserInfo,
-    getUserInfo} from "../controllers/userProfile.controller.js";
+    getUserInfo,
+    pastAppointments} from "../controllers/userProfile.controller.js";
 
 const router=Router();
 
@@ -22,4 +23,5 @@ router.route('/is-present').patch(verifyJWT("User"), isPresent);
 router.route('/create-user-info').post(verifyJWT("User"), createUserInfo);
 router.route('/update-user-info').patch(verifyJWT("User"), updateUserInfo);
 router.route('/get-user-info').get(verifyJWT("User"), getUserInfo);
+router.route('/view-past-appointments').get(verifyJWT("User"),pastAppointments);
 export default router;

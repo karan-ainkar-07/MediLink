@@ -1,0 +1,53 @@
+.appointments-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+.appointments-list {
+  list-style: none;
+  padding: 0;
+}
+
+.appointment-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: #f9f9f9;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.live-appointment {
+  border-color: #4caf50;
+  background-color: #e6f4ea;
+}
+
+.appointment-section {
+  margin-bottom: 1rem;
+}
+
+.appointment-section h3 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.appointment-section p {
+  margin: 0.2rem 0;
+}
+
+.doctor-image, .clinic-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+}
+
+.appointments-loading,
+.appointments-error {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: 2rem;
+}

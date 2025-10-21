@@ -1,15 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./Dashboard.css";
-import { FaUserCircle } from "react-icons/fa"; 
+import { FaUserCircle, FaHeartbeat, FaHistory } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { backendUrl } from "../constants";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("health");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const fetchedUser = await axios.get(`${backendUrl}/User/get-current-user`, {
+          withCredentials: true,
+        });
+        setUser(fetchedUser.data?.data || null);
+      } catch (err) {
+        console.error(err);
+        navigate("/");
+      }
+    };
+    fetchUser();
+  }, [navigate]);
+
+  if (!user) return null;
+
   return (
     <div className="container">
       {/* Navbar */}
       <nav className="navbar">
-        <button className="profile-btn">
+        <button className="profile-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
           <FaUserCircle className="profile-icon" />
           Profile
         </button>
@@ -22,6 +45,49 @@ export default function Dashboard() {
 
         <img src="/images/logo/logo.png" alt="logo" className="nav-logo" />
       </nav>
+
+      {/* Sidebar (slides from right) */}
+      <div className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)}></div>
+      <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sidebar-header">
+          <FaUserCircle className="sidebar-avatar" />
+          <h3>{user.name || "User"}</h3>
+          <p>{user.email || "user@email.com"}</p>
+        </div>
+
+        <div className="sidebar-tabs">
+          <button
+            className={`tab-btn ${activeTab === "health" ? "active" : ""}`}
+            onClick={() => setActiveTab("health")}
+          >
+            <FaHeartbeat /> Health Info
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "appointments" ? "active" : ""}`}
+            onClick={() => setActiveTab("appointments")}
+          >
+            <FaHistory /> Past Appointments
+          </button>
+        </div>
+
+        <div className="sidebar-content">
+          {activeTab === "health" && (
+            <div>
+              <h4>Health Info</h4>
+              <p><strong>Age:</strong> {user.age || "Not provided"}</p>
+              <p><strong>Gender:</strong> {user.gender || "Not provided"}</p>
+              <p><strong>Blood Group:</strong> {user.bloodGroup || "Not provided"}</p>
+            </div>
+          )}
+          {activeTab === "appointments" && (
+            <div>
+              <button onClick={()=>{
+                navigate('/PastAppointments')
+              }}>Past Appointments</button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Hero Section */}
       <section
@@ -47,7 +113,7 @@ export default function Dashboard() {
 
       {/* Features Section */}
       <section className="features">
-        <button className="btn-blue">Booked Appointments</button>
+        <button className="btn-blue" onClick={() => navigate("/PastAppointments")}>Booked Appointments</button>
         <button className="btn-yellow" onClick={() => navigate("/symptom")}>Symptom Checker</button>
       </section>
 

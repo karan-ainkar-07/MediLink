@@ -23,13 +23,13 @@ const generateAccessAndRefreshTokens = async(user) => {
 const registerUser=asyncHandler( async(req,res)=>{
 
     //get user details from req
-    const {email,mobileNo,password,experience,educationString,specialization,clinic}=req.body;
+    const {name,email,mobileNo,password,experience,educationString,specialization,clinic}=req.body;
 
     //get loalFile from multer req.files
     const localFilePath=req.file;
     //validate details check if empty
     if (
-        [ email,mobileNo,password,clinic].some((field) => field?.trim() === "")
+        [name, email,mobileNo,password,clinic].some((field) => field?.trim() === "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
@@ -63,6 +63,7 @@ const registerUser=asyncHandler( async(req,res)=>{
     //if not create a new user object 
     const user=await Doctor.create(
         {
+            name,
             email,
             mobileNo,
             password,
@@ -364,7 +365,15 @@ const viewAppointments= asyncHandler(async (req,res)=>{
     }
 
     //get the appointments only the booked and which are not completed yet using the queue id 
-    const appointments = await Appointment.find({partOfQueue:queue._id, status:"Booked"}).sort({createdAt:1});
+    const appointments = await Appointment.find({
+        partOfQueue: queue._id,
+        status: "Booked"
+    })
+    .sort({ createdAt: 1 })
+    .populate({
+        path: "patient", 
+        select: "name email mobileNo" 
+    })
     
     //return the appointments array 
     res.status(200)
