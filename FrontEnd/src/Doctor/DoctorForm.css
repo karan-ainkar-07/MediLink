@@ -11,7 +11,7 @@ body {
   padding: 30px 40px;
   border-radius: 15px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -24,19 +24,21 @@ body {
 .form-title {
   text-align: center;
   color: #004aad;
-  margin-bottom: 20px;
-  font-size: 1.8em;
+  margin-bottom: 25px;
+  font-size: 1.9em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  margin-bottom: 18px;
 }
 
 .input-group label {
-  margin-bottom: 5px;
-  font-weight: bold;
+  margin-bottom: 6px;
+  font-weight: 600;
   color: #003366;
 }
 
@@ -47,6 +49,7 @@ body {
   border-radius: 8px;
   font-size: 1em;
   transition: all 0.3s ease;
+  background: #f9fbff;
 }
 
 .input-group input:focus,
@@ -54,28 +57,75 @@ body {
   outline: none;
   border-color: #0073ff;
   box-shadow: 0 0 8px rgba(0, 115, 255, 0.3);
+  background: white;
+}
+
+.med-title {
+  color: #004aad;
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border-left: 4px solid #0073ff;
+  padding-left: 10px;
+  font-size: 1.1em;
 }
 
 .medicine-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
+  background: #f4f8ff;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #d7e3ff;
+  transition: background 0.3s ease;
 }
 
-.medicine-input {
-  flex: 1 1 200px;
+.medicine-row:hover {
+  background: #eaf2ff;
+}
+
+.medicine-row input[type="text"],
+.medicine-row input[type="number"] {
+  flex: 1 1 180px;
   padding: 8px 12px;
   border: 1px solid #aac4ff;
   border-radius: 8px;
   transition: all 0.3s ease;
+  font-size: 0.95em;
 }
 
-.medicine-input:focus {
+.medicine-row input:focus {
   outline: none;
   border-color: #0073ff;
   box-shadow: 0 0 8px rgba(0, 115, 255, 0.3);
+  background: white;
+}
+
+.freq-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.freq-options label {
+  font-size: 0.9em;
+  color: #003366;
+  background: #e0ecff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.freq-options input {
+  margin-right: 4px;
+}
+
+.freq-options label:hover {
+  background: #cfe0ff;
 }
 
 .add-btn,
@@ -89,10 +139,17 @@ body {
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
+  text-align: center;
 }
 
 .add-btn:hover,
 .send-btn:hover {
   background: linear-gradient(90deg, #1e7cff, #4dabff);
   transform: scale(1.05);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
 }

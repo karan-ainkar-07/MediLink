@@ -25,7 +25,7 @@ router.route('/refresh-token').post(refreshAccessToken);
 router.route('/reset-password').patch(resetPassword);
 router.route('/pause-queue').patch(VerifyJWT("Doctor"), pauseQueue);
 router.route('/resume-queue').patch(VerifyJWT("Doctor"), resumeQueue);
-router.route('/next-coupon').post(VerifyJWT("Doctor"), nextCoupon);
+router.route('/next-coupon').get(VerifyJWT("Doctor"), nextCoupon);
 router.route('/save-prescription').post(VerifyJWT("Doctor"), saveAndSendPrescription);
 router.route('/view-appointments').get(VerifyJWT("Doctor"), viewAppointments);
 router.route('/start-clinic').patch(VerifyJWT("Doctor"), startClinic);

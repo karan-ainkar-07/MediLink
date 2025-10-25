@@ -90,7 +90,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       // find clinics in the city
       let clinicIds = [];
       if (city) {
-        const clinics = await Clinic.find({ "address.city": city }).select("_id");
+        const clinics = await Clinic.find({ "address.city": city  }).select("_id");
         clinicIds = clinics.map(c => c._id);
         if (clinicIds.length === 0) {
           return res.status(200).json(

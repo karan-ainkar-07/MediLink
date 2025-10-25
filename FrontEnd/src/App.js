@@ -20,7 +20,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Auth/> } />
         <Route path="/doctorDashboard" element={<DoctorDashboard/> } />
-        <Route path="/prescription" element={<DoctorPrescriptionForm/>}/>
+        <Route path="/prescription/:patientId" element={<DoctorPrescriptionForm/>}/>
         <Route path="/clinic-signUp" element={<ClinicSignup/>}/>
         <Route path="/clinic-signIn" element={<LoginClinic/>}/>
         <Route path="/doctor-signUp" element={<DoctorRegistration/>} />

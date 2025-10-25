@@ -384,13 +384,18 @@ const viewAppointments= asyncHandler(async (req,res)=>{
 
 const nextCoupon = asyncHandler(async (req, res) => {
     //  Get the latest coupon
-    const {DoctorId}= req.user._id;
+    const DoctorId= req.user._id;
 
     const queue= await Queue.findOneAndUpdate({doctor:DoctorId},{$inc:{currentToken:1}},{new:true})
 
-    const nextPatientArray=await Appointment.find({doctor:DoctorId,partOfQueue:queue._id, isPresent:true, status:"Booked" }).sort({createdAt:1});
+    const nextPatient = await Appointment.findOneAndUpdate(
+        { doctor: DoctorId, partOfQueue: queue._id, isPresent: true, status: "Booked" },
+        { $set: { status: "In-Progress", startTime: new Date() } },
+        { new: true, sort: { createdAt: 1 } } // sort & return updated document
+    )
+    .populate("patient", "name email"); // populate after update
 
-    if(!nextPatientArray && !nextPatientArray[0])
+    if(!nextPatient)
     {
         throw new ApiError(404,"No active Appointment found");
     }
@@ -403,9 +408,6 @@ const nextCoupon = asyncHandler(async (req, res) => {
     // absentAppointments.forEach(()=>{
     //     sendEmail();
     // })
-
-
-    const nextPatient=nextPatientArray[0];
 
     //set the appointment starting time
     nextPatient.startTime=new Date();
@@ -428,12 +430,18 @@ const nextCoupon = asyncHandler(async (req, res) => {
 const saveAndSendPrescription = asyncHandler(async(req,res)=>{
     //get the patient and user from the req.query
     const doctorId =req.user._id;
-    const {patientId} = req.query;
+
+    const {patientId,QueueId} = req.query;
 
     //get the Prescription form the body
     const {diagnoses,medicines,notes}=req.body;
+    
+    const appointment=await Appointment.findOne({patient:patientId,doctor:doctorId ,partOfQueue:QueueId, status:"Booked"});
 
-    const appointment=await Appointment.findOne({patient:patientId,doctor:doctorId , status:{ $in:["Booked","Skipped"]}}).sort({createdAt:-1});
+    if(!appointment)
+    {
+        throw new ApiError(402,"cant find Appointment")
+    }
 
     const queue = Queue.findOne({_id:appointment.partOfQueue});
     

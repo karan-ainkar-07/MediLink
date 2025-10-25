@@ -430,3 +430,78 @@ tr:nth-child(even) {
   background: #28a745;
 }
 
+/* === Doctor Dashboard: Queue Controls === */
+.queue-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+
+.next-btn {
+  background: linear-gradient(90deg, #00b09b, #96c93d);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 176, 155, 0.3);
+  transition: all 0.3s ease;
+}
+
+.next-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(90deg, #43cea2, #185a9d);
+}
+
+.next-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* === Current Patient Section === */
+.current-patient {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  padding: 30px 40px;
+  max-width: 900px;
+  margin: 0 auto 40px;
+  text-align: center;
+}
+
+.current-patient h2 {
+  color: #1d2671;
+  margin-bottom: 20px;
+  font-size: 1.7rem;
+}
+
+.patient-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 1.05rem;
+  color: #2c3e50;
+}
+
+.no-patient {
+  color: #ff3333;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.current-active {
+  border: 2px solid #28a745;
+  background: #f0fff4;
+}
+
+/* === Disabled Buttons Styling for Queue === */
+.stop-btn:disabled,
+.resume-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}

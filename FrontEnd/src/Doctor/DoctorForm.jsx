@@ -1,151 +1,142 @@
 import { useState } from "react";
-import "./DoctorForm.css"; // import the CSS
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import "./DoctorForm.css";
+import { backendUrl } from "../constants";
 
 export default function DoctorPrescriptionForm() {
-  const [patientName, setPatientName] = useState("");
-  const [patientEmail, setPatientEmail] = useState("");
-  const [prescription, setPrescription] = useState("");
+  const { patientId } = useParams();
+  const [notes, setNotes] = useState("");
+  const [diagnoses, setDiagnoses] = useState([{ condition: "" }]);
   const [medicines, setMedicines] = useState([
-    { name: "", morning: false, afternoon: false, evening: false },
+    { name: "", dosage: "", duration: "", frequency: [] },
   ]);
 
-  const baseUrl = "http://localhost:8000";
+  const handleDiagnosisChange = (index, value) => {
+    const updated = [...diagnoses];
+    updated[index].condition = value;
+    setDiagnoses(updated);
+  };
+
+  const addDiagnosis = () => {
+    setDiagnoses([...diagnoses, { condition: "" }]);
+  };
 
   const handleMedicineChange = (index, field, value) => {
-    const updatedMedicines = [...medicines];
-    updatedMedicines[index][field] = value;
-    setMedicines(updatedMedicines);
+    const updated = [...medicines];
+    if (field === "frequency") {
+      if (updated[index].frequency.includes(value)) {
+        updated[index].frequency = updated[index].frequency.filter((f) => f !== value);
+      } else {
+        updated[index].frequency.push(value);
+      }
+    } else {
+      updated[index][field] = value;
+    }
+    setMedicines(updated);
   };
 
   const addMedicine = () => {
     setMedicines([
       ...medicines,
-      { name: "", morning: false, afternoon: false, evening: false },
+      { name: "", dosage: "", duration: "", frequency: [] },
     ]);
   };
 
-  const sendPrescription = async () => {
-    let medicineList = medicines
-      .map((med) => {
-        let times = [];
-        if (med.morning) times.push("Morning");
-        if (med.afternoon) times.push("Afternoon");
-        if (med.evening) times.push("Evening");
-
-        return `${med.name} - ${times.join(", ")}`;
-      })
-      .join("\n");
-
-    const message = `Hello ${patientName},\n\nHere is your e-prescription:\n\n${medicineList}\n\nNotes:\n${prescription}\n\nGet well soon!`;
-
-    const dataSend = {
-      email: patientEmail,
-      subject: `E-Prescription for ${patientName}`,
-      message,
-    };
-
+  const handleSubmit = async () => {
     try {
-      const res = await fetch(`${baseUrl}/email/sendPrescription`, {
-        method: "POST",
-        body: JSON.stringify(dataSend),
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.post(
+        { diagnoses, medicines, notes },
+        { withCredentials: true }
+      );
 
-      if (res.ok) {
-        alert("Prescription sent successfully!");
-      } else {
-        alert("Failed to send prescription");
+      if (response.status === 200) {
+        alert("Prescription saved successfully!");
+        setNotes("");
+        setDiagnoses([{ condition: "" }]);
+        setMedicines([{ name: "", dosage: "", duration: "", frequency: [] }]);
       }
     } catch (err) {
       console.error(err);
-      alert("Error sending prescription");
+      alert("Error saving prescription");
     }
   };
 
   return (
     <div className="form-container">
-      <h2 className="form-title">Doctor E-Prescription Form</h2>
+      <h2 className="form-title">E-Prescription</h2>
+      <p className="patient-id">Patient ID: <strong>{patientId}</strong></p>
 
-      <div className="input-group">
-        <label>Patient Name</label>
-        <input
-          type="text"
-          placeholder="Enter patient's name"
-          onChange={(e) => setPatientName(e.target.value)}
-        />
-      </div>
-
-      <div className="input-group">
-        <label>Patient Email</label>
-        <input
-          type="email"
-          placeholder="Enter patient's email"
-          onChange={(e) => setPatientEmail(e.target.value)}
-        />
-      </div>
-
-      <h3 className="med-title">Medicines</h3>
-      {medicines.map((med, index) => (
-        <div key={index} className="medicine-row">
-          <input
-            type="text"
-            placeholder="Medicine name"
-            value={med.name}
-            onChange={(e) =>
-              handleMedicineChange(index, "name", e.target.value)
-            }
-            className="medicine-input"
-          />
-          <label>
+      <section>
+        <h3 className="section-title">Diagnoses</h3>
+        {diagnoses.map((diag, i) => (
+          <div key={i} className="input-row">
             <input
-              type="checkbox"
-              checked={med.morning}
-              onChange={(e) =>
-                handleMedicineChange(index, "morning", e.target.checked)
-              }
+              type="text"
+              placeholder="Condition (e.g., Diabetes, Hypertension)"
+              value={diag.condition}
+              onChange={(e) => handleDiagnosisChange(i, e.target.value)}
             />
-            Morning
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={med.afternoon}
-              onChange={(e) =>
-                handleMedicineChange(index, "afternoon", e.target.checked)
-              }
-            />
-            Afternoon
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={med.evening}
-              onChange={(e) =>
-                handleMedicineChange(index, "evening", e.target.checked)
-              }
-            />
-            Evening
-          </label>
-        </div>
-      ))}
+          </div>
+        ))}
+        <button className="add-btn" onClick={addDiagnosis}>
+          + Add Diagnosis
+        </button>
+      </section>
 
-      <button className="add-btn" onClick={addMedicine}>
-        + Add More Medicine
-      </button>
+      <section>
+        <h3 className="section-title">Medicines</h3>
+        {medicines.map((med, i) => (
+          <div key={i} className="medicine-card">
+            <input
+              type="text"
+              placeholder="Medicine name"
+              value={med.name}
+              onChange={(e) => handleMedicineChange(i, "name", e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Dosage (mg)"
+              value={med.dosage}
+              onChange={(e) => handleMedicineChange(i, "dosage", e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Duration (days)"
+              value={med.duration}
+              onChange={(e) => handleMedicineChange(i, "duration", e.target.value)}
+            />
+
+            <div className="freq-options">
+              {["Morning", "Afternoon", "Evening", "Night"].map((time) => (
+                <label key={time}>
+                  <input
+                    type="checkbox"
+                    checked={med.frequency.includes(time)}
+                    onChange={() => handleMedicineChange(i, "frequency", time)}
+                  />
+                  {time}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+        <button className="add-btn" onClick={addMedicine}>
+          + Add Medicine
+        </button>
+      </section>
 
       <div className="input-group">
         <label>Additional Notes</label>
         <textarea
-          placeholder="Write prescription details here..."
-          onChange={(e) => setPrescription(e.target.value)}
+          placeholder="Write prescription notes or observations..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
       </div>
 
-      <button className="send-btn" onClick={sendPrescription}>
-        Send Prescription
+      <button className="send-btn" onClick={handleSubmit}>
+        Save & Complete Appointment
       </button>
     </div>
   );
