@@ -391,9 +391,9 @@ const nextCoupon = asyncHandler(async (req, res) => {
     const nextPatient = await Appointment.findOneAndUpdate(
         { doctor: DoctorId, partOfQueue: queue._id, isPresent: true, status: "Booked" },
         { $set: { status: "In-Progress", startTime: new Date() } },
-        { new: true, sort: { createdAt: 1 } } // sort & return updated document
+        { new: true, sort: { createdAt: 1 } } 
     )
-    .populate("patient", "name email"); // populate after update
+    .populate("patient", "name email"); 
 
     if(!nextPatient)
     {
@@ -431,12 +431,12 @@ const saveAndSendPrescription = asyncHandler(async(req,res)=>{
     //get the patient and user from the req.query
     const doctorId =req.user._id;
 
-    const {patientId,QueueId} = req.query;
+    const {appointmentId} = req.query;
 
     //get the Prescription form the body
     const {diagnoses,medicines,notes}=req.body;
     
-    const appointment=await Appointment.findOne({patient:patientId,doctor:doctorId ,partOfQueue:QueueId, status:"Booked"});
+    const appointment=await Appointment.findOne({_id:appointmentId});
 
     if(!appointment)
     {
