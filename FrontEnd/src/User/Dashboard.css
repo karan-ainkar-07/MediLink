@@ -371,3 +371,242 @@ body {
 .sidebar-tabs button:hover {
   background: #3d54c4;
 }
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.appointment-item {
+  background: #f4f6f8;
+  border-left: 4px solid #007BFF;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.appointment-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.appointment-item p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+.section-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 0.3rem;
+  color: #1b2a4e;
+  font-weight: 700;
+}
+
+.section-subtitle {
+  text-align: center;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+.doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.8rem;
+  padding: 0 2rem;
+}
+
+.doctor-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.doctor-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.doctor-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.doctor-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rating-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ffd700;
+  color: #1b1b1b;
+  font-weight: 600;
+  border-radius: 30px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+}
+
+.star-icon {
+  color: #ffb400;
+}
+
+.doctor-info {
+  padding: 1rem 1.2rem;
+  text-align: center;
+}
+
+.doctor-name {
+  font-size: 1.2rem;
+  color: #1b2a4e;
+  font-weight: 700;
+}
+
+.doctor-specialization {
+  font-size: 1rem;
+  color: #0b7dda;
+  margin: 0.3rem 0;
+  font-weight: 600;
+}
+
+.doctor-clinic,
+.doctor-location,
+.doctor-experience,
+.doctor-rate {
+  font-size: 0.95rem;
+  color: #555;
+  margin: 0.2rem 0;
+}
+
+.book-btn {
+  margin: 1rem 0 1.2rem;
+  padding: 0.6rem 1.4rem;
+  background: linear-gradient(135deg, #0b7dda, #2b9ed7);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.book-btn:hover {
+  background: linear-gradient(135deg, #0983c4, #1976d2);
+}
+
+/* Doctor Section Layout */
+.doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  justify-items: center;
+  padding: 20px;
+}
+
+/* Doctor Card Styling */
+.doctor-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 240px;
+  transition: transform 0.2s ease-in-out;
+  text-align: center;
+}
+
+.doctor-card:hover {
+  transform: scale(1.03);
+}
+
+/* Doctor Image Wrapper */
+.doctor-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+}
+
+.doctor-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Rating Badge */
+.rating-badge {
+  position: absolute;
+  top: 130px;
+  right: 30px;
+  background: #ffd700;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+}
+
+.star-icon {
+  margin-right: 4px;
+  font-size: 0.9rem;
+}
+
+/* Doctor Info Section */
+.doctor-info {
+  padding: 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.doctor-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.doctor-specialization {
+  font-size: 0.9rem;
+  color: #0077cc;
+  margin-bottom: 6px;
+}
+
+.doctor-clinic,
+.doctor-location,
+.doctor-experience,
+.doctor-rate {
+  margin: 2px 0;
+}
+
+/* Book Button */
+.book-btn {
+  background: #0077cc;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.book-btn:hover {
+  background: #005fa3;
+}

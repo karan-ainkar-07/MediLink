@@ -1,13 +1,12 @@
 import { UserInfo } from "../models/userInfo.model.js";
 import { Queue } from "../models/queue.model.js";
 import {Doctor} from "../models/doctor.model.js"
-import {Clinic} from "../models/Clinic.model.js"
 import {Appointment} from "../models/appointment.model.js"
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Feedback } from "../models/feedback.model.js";
 
-//ready to deploy
 //Add, View, Edit Health Details
 
     //Create new UserInfo document
@@ -87,32 +86,18 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     //get the list of doctors 
     const getDoctors = asyncHandler(async (req, res) => {
       const { specialization, city } = req.query;
-    
-      // find clinics in the city
-      let clinicIds = [];
-      if (city) {
-        const clinics = await Clinic.find({ "address.city": city  }).select("_id");
-        clinicIds = clinics.map(c => c._id);
-        if (clinicIds.length === 0) {
-          return res.status(200).json(
-            new ApiResponse(200, { docList: [] }, "No doctors found in this city")
-          );
-        }
-      }
-    
        // build filters
       const filter = {};
       if (specialization) 
           filter.specialization = specialization;
         
-      if (clinicIds.length > 0) 
-          filter.clinic = { $in: clinicIds };
+      if (city)
+      {
+        filter["address.city"] =  city;
+      }
     
       // fetch doctors
-      const doctors = await Doctor.find(filter).populate(
-        "clinic",
-        "name addresslocation"
-      );
+      const doctors = await Doctor.find(filter)
     
       return res.status(200).json(
         new ApiResponse(200, { docList: doctors }, "Doctors fetched successfully")
@@ -130,7 +115,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
           )
         }
 
-        const doctor=await Doctor.findOne({_id:doctorId}).populate("clinic","address name ");
+        const doctor=await Doctor.findOne({_id:doctorId});
+
         if(!doctor)
         {
           throw new ApiError(
@@ -152,35 +138,83 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
     //View the slots 
     const getCouponStats = asyncHandler(async (req,res) => {
-      const { doctorId, clinicId } = req.query;
-      
-      if (!doctorId || !clinicId) {
-        throw new ApiError(400, "DoctorId and ClinicId is required");
+
+      const { doctorId, dateStr } = req.query;
+
+      if (!doctorId) {
+        throw new ApiError(400, "DoctorId is required");
       }
-      const start=new Date();
-      start.setHours(0,0,0,0);
 
-      const end=new Date(start);
-      end.setDate(end.getDate()+1);
+      const fetchedDoctor = await Doctor.findById(doctorId);
 
-      const queue = await Queue.findOneAndUpdate(
-        { clinic: clinicId, doctor: doctorId, date: { $gte: start, $lt: end }  },
-        {      
-          date: new Date(), 
-          doctor: doctorId,          
-          clinic: clinicId 
-        },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-      
-      res.status(200).json(
+      const selectedDate = new Date(dateStr);
+
+      if (isNaN(selectedDate.getTime())) {
+        throw new ApiError(403,"Cant change to standard date");
+      }
+
+      const queue = await Queue.findOne({
+        doctor: doctorId,
+        date: selectedDate
+      });
+
+      function minutesToDisplay(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}`;
+      }
+
+      const now = new Date();
+
+      const isToday =
+        now.getFullYear() === selectedDate.getFullYear() &&
+        now.getMonth() === selectedDate.getMonth() &&
+        now.getDate() === selectedDate.getDate();
+
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+      const bookedSet = new Set();
+
+      if (queue) {
+        const todayAppointments = await Appointment.find({ partOfQueue: queue._id });
+
+        todayAppointments.forEach(appt => {
+          bookedSet.add(appt.time);
+        });
+      }
+
+      const Coupons = [];
+
+      for (let i = fetchedDoctor.startTime; i < fetchedDoctor.endTime; i += fetchedDoctor.slotTime) {
+
+        let isCouponAvailable = true;
+
+        if (isToday && i <= nowMinutes) {
+          isCouponAvailable = false;
+        }
+
+        if (bookedSet.has(i)) {
+          isCouponAvailable = false;
+        }
+
+        Coupons.push({
+          startTime: i,
+          couponNumber: Math.floor((i - fetchedDoctor.startTime) / fetchedDoctor.slotTime) + 1,
+          available: isCouponAvailable,
+          displayTime: minutesToDisplay(i),
+        });
+      }
+      const isQueue= queue ? true : false
+
+      return res.status(200).json(
         new ApiResponse(
           200,
           {
-            currentCoupon:queue.currentToken,
-            totalCoupons: queue.totalTokens,
-            queueStatus:queue.status,
-            queue:queue,
+            availableCoupons: Coupons,
+            status: queue ? queue.status : "In-Progress",
+            doctor: queue ? queue.doctor : doctorId,
+            date: queue ? queue.date : selectedDate,
+            isQueue:isQueue,
           },
           "CouponStats fetched successfully"
         )
@@ -190,80 +224,48 @@ import { ApiResponse } from "../utils/ApiResponse.js";
     //Book the slot
     const BookAppointment = asyncHandler(async (req, res) => {
       // get the queue and userID from query
-      const { queue } = req.body;
+      const { doctorId,date,time,couponNumber} = req.body;
 
       const userID = req.user?._id;
     
-      if (!queue || !userID) {
-        throw new ApiError(404, "No userID or queue provided");
+      if (!doctorId || !date || !time || !couponNumber) {
+        throw new ApiError(404, "No doctorId or date or time provided");
+      }
+      const fetchedDoctor=await Doctor.findById(doctorId);
+
+      if(!fetchedDoctor)
+      {
+        throw new ApiError(404,"No doctor found");
       }
     
-      // get the total coupons from queue
-      const { totalTokens, doctor, clinic, currentToken } = queue;
-    
-      // increment the queue token count
-      const couponNumber = totalTokens + 1;
+      const formattedDate=new Date(date);
+      let queue= await Queue.findOne({doctor:doctorId,date:formattedDate});
 
-      //find clinic from the clinicId
-      const doctorObj=await Doctor.findById(doctor)
-      if(!doctorObj)
+      if(!queue)
       {
-        throw new ApiError(404,`No clinic with Id ${doctor} found`);
+        await Queue.create({
+          doctor:doctorId,
+          date:formattedDate,
+        })
+
+        queue=await Queue.findOne({doctor:doctorId,date:formattedDate});
       }
 
-      const averageTime=doctorObj.AppointmentTime;
-      let expectedDate=null;
-      if(averageTime)
-      {
-         const expectedTime=averageTime * (totalTokens-currentToken);
-         expectedDate= new Date(Date.now() + expectedTime * 1000);
-      }
-      
-      const date=new Date();
+      await queue.save();
 
       // create a new appointment
       const appointment = await Appointment.create({
         patient: userID,
-        doctor: doctor,
-        clinic: clinic,
-        couponNumber: couponNumber,
+        doctor: doctorId,
+        couponNumber:couponNumber,
         date: date,
+        time:time,
         partOfQueue: queue._id,
-        expectedTime: expectedDate,
       });
-        
-      // update the queue totalTokens
-      const queueDoc = await Queue.findById(queue._id);
-      queueDoc.totalTokens += 1;
-      await queueDoc.save();
-
-    
+            
       // return the coupon as response
       return res.status(200).json(
         new ApiResponse(200, appointment, "Appointment booked successfully")
-      );
-    });
-
-    //const toggel is Present in the clinic 
-    const isPresent = asyncHandler(async (req, res) => {
-      const userId = req.user._id;
-      const { appointmentId } = req.query;
-    
-      if (!appointmentId) {
-        throw new ApiError(402, "No appointmentId provided");
-      }
-    
-      const appointment = await Appointment.findOne({ _id: appointmentId,   patient:  userId });
-      if (!appointment) {
-        throw new ApiError(404, "Appointment not found");
-      }
-    
-      appointment.isPresent = !appointment.isPresent;
-      await appointment.save();
-    
-      res.status(200)
-          .json(
-            new ApiResponse(200,appointment,"Appointment is present updated successfully")
       );
     });
 
@@ -283,18 +285,14 @@ import { ApiResponse } from "../utils/ApiResponse.js";
         ["status","currentToken"]
       )
       .populate(
-        "clinic",
-        ["name","logo","mobileNo","address","email"]
-      )
-      .populate(
         "doctor",
-        ["name","profileImage","specialization","rate"]
+        ["name","profileImage","specialization","rate","address","clinicName"]
       )
       ;
 
       if(!appointments)
       {
-        throw new ApiError(403,"Unable to find Appoitments");
+        throw new ApiError(403,"Unable to find Appointments");
       }
 
 
@@ -314,18 +312,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
       {
         throw new ApiError(401,"Unable to get the UserId");
       }
-
       //make a list of objects for each appointment containing every info
-      const appointments = await Appointment.find({patient:userId,status:{
-        $in:["Completed","Cancelled"],
-      }})
-      .populate(
-        "clinic",
-        ["name","logo","mobileNo","address","email"]
-      )
+      const appointments = await Appointment.find({patient:userId,status:"Completed"})
       .populate(
         "doctor",
-        ["name","profileImage","specialization","rate"]
+        ["name","profileImage","specialization","rate","address","clinicName"]
       );
 
       if(!appointments)
@@ -333,14 +324,66 @@ import { ApiResponse } from "../utils/ApiResponse.js";
         throw new ApiError(403,"Unable to find Appoitments");
       }
 
-
-
       return res
               .status(200)
               .json(
-                new ApiResponse(200,{appointments},"Appointments fetched successfully")
+                new ApiResponse(200,appointments,"Appointments fetched successfully")
               )
     });
+
+    const getTopDoctors = asyncHandler(async (req, res) => {
+      const doctors = await Doctor.find({ totalFeedback: { $gt: 3 } }).sort({ rating: -1 });    
+      res.status(200).json(new ApiResponse(true, doctors, "Top doctors fetched successfully"));
+    });
+
+    const giveFeedback = asyncHandler( async (req,res)=>{
+      const userId= req.user?._id;
+      const {appointmentId,doctorId}= req.query;
+      const {overall,waiting,staff,explanation,comments,cleanliness,attentive}=req.body;
+
+      if(!userId || !appointmentId || !doctorId)
+      {
+        console.log(appointmentId)
+        throw new ApiError(402,"No userId or AppointmentId or doctorId used");
+      }
+
+      if(!overall)
+      {
+        throw new ApiError(402,"No Rating given");
+      }
+
+      const doctor=await Doctor.findOne({_id:doctorId})
+      if(doctor.totalFeedback!=0)
+      {
+doctor.rating = ((doctor.rating * doctor.totalFeedback) + overall) / (doctor.totalFeedback + 1);
+
+      }
+      else
+      {
+        doctor.rating=overall;
+      }
+      await doctor.save()
+
+      await Doctor.findOneAndUpdate({_id:doctorId},{$inc:{totalFeedback:1}},{new:true});
+      const appointment =await Appointment.findOneAndUpdate({_id:appointmentId},{feedbackGiven:true});
+      await Feedback.create(
+        {
+          doctor:doctorId,
+          appointment:appointmentId,
+          patient:userId,
+          rating:overall,
+          feedback:comments,
+          attentiveness:attentive,
+          explanationOfCondition:explanation,
+          cleanliness:cleanliness,
+          staffBehaviour:staff,
+          waitingTime:waiting,
+        }
+      )
+      res.status(200).json(
+        new ApiResponse(200,doctorId)
+      );
+    })
 
 export  {
     getDoctors,
@@ -348,8 +391,9 @@ export  {
     BookAppointment,
     getDoctor,
     viewAppointments,
-    isPresent,
     createUserInfo,
+    getTopDoctors,
+    giveFeedback,
     updateUserInfo,
     getUserInfo,
     pastAppointments,

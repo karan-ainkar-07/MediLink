@@ -11,6 +11,10 @@ const AppointmentSchema = new Schema(
       enum: ["Booked", "Completed", "Cancelled", "In-Progress"], 
       default: "Booked" ,
     },
+    time:{
+      type:Number, //60* hour + 00 (midnight)
+      required:true,
+    },
     couponNumber:
     {
         type:Number,

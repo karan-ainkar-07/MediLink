@@ -51,3 +51,104 @@
   font-size: 1.2rem;
   margin-top: 2rem;
 }
+
+.appointments-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f7f9fc;
+  border-radius: 12px;
+}
+
+.appointments-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #222;
+  font-weight: 600;
+}
+
+.appointments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.appointment-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.appointment-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.appointment-section {
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #eee;
+}
+
+.appointment-section:last-child {
+  border-bottom: none;
+}
+
+.appointment-section h3 {
+  color: #333;
+  margin-bottom: 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-left: 4px solid #4f46e5;
+  padding-left: 0.5rem;
+}
+
+.appointment-section p {
+  margin: 0.3rem 0;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.doctor-image,
+.clinic-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+}
+
+.appointments-loading,
+.appointments-error {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  color: #333;
+}
+
+/* Status Colors */
+.status-text {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.status-active {
+  background-color: #e7f7ec;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.status-stopped {
+  background-color: #fdecea;
+  color: #c62828;
+  border: 1px solid #e53935;
+}

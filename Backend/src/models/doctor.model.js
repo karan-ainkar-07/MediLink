@@ -29,14 +29,6 @@ const doctorSchema = new Schema(
         refreshToken:{
             type:String,
         },
-        isMobileVerified:{
-            type:Boolean,
-            default:false,
-        },
-        isEmailVerified:{
-            type:Boolean,
-            default:false,
-        },
         education: [
           {
             degree: { type: String, required: true },    
@@ -50,10 +42,10 @@ const doctorSchema = new Schema(
             default:0,
         },
         specialization:{
-            type:[String],
+            type:String,
             enum:["Dentist","Dermatology", "Pediatrics","General Practitioner"],
             required:true,
-            default:["General Practitioner"]
+            default:"General Practitioner"
         },
         rate:{
             type:Number,
@@ -64,17 +56,52 @@ const doctorSchema = new Schema(
             type:String,
             required:true,
         },
-        clinic:
-        {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Clinic",
-            required:true,
-        },
-        AppointmentTime: //average appointment time in seconds
-        {
+        startTime:{
             type:Number,
             required:false,
-        }
+            default:540, // midnight + 60(minutes) * hour start
+        },
+        endTime:{
+            type:Number,
+            required:false,
+            default:1080,
+        },
+        slotTime:{
+            type:Number,
+            required:false,
+            default:20,
+        },
+        rating:{
+            type:Number,
+            required:false,
+        },
+        totalFeedback:{
+            type:Number,
+            required:false,
+            default:0,
+        },
+        clinicName:{
+            type:String,
+            required:true,
+        },
+        address:{
+            line1:{
+                type:String,
+                required:true,
+            },
+            line2:{
+                type:String,
+                required:false,
+            },
+            city:{
+                type:String,
+                required:true,
+            },
+            state:{
+                type:String,
+                required:true,
+            }
+        },
     },
     {
         timestamps:true,

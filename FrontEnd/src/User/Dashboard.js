@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./Dashboard.css";
-import { FaUserCircle, FaHeartbeat, FaHistory } from "react-icons/fa"; 
+import { FaUserCircle, FaHistory, FaStar } from "react-icons/fa"; 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { backendUrl } from "../constants";
@@ -9,7 +9,21 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("health");
+  const [appointments, setAppointments] = useState([]);
+  const [topDoctors, setTopDoctors] = useState([]);
+
+  useEffect(() => {
+    const getTopDoctors = async () => {
+      try {
+        const res = await axios.get(`${backendUrl}/userProfile/get-top-doctors`);
+        setTopDoctors(res.data?.data || []);
+        console.log(res)
+      } catch (err) {
+        console.error("Failed to fetch top doctors:", err);
+      }
+    };
+    getTopDoctors();
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -25,6 +39,17 @@ export default function Dashboard() {
     };
     fetchUser();
   }, [navigate]);
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/userProfile/view-past-appointments`, {
+        withCredentials: true,
+      });
+      setAppointments(response.data?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch past appointments:", err);
+    }
+  };
 
   if (!user) return null;
 
@@ -46,8 +71,12 @@ export default function Dashboard() {
         <img src="/images/logo/logo.png" alt="logo" className="nav-logo" />
       </nav>
 
-      {/* Sidebar (slides from right) */}
-      <div className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)}></div>
+      {/* Sidebar */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      ></div>
+
       <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <FaUserCircle className="sidebar-avatar" />
@@ -56,35 +85,34 @@ export default function Dashboard() {
         </div>
 
         <div className="sidebar-tabs">
-          <button
-            className={`tab-btn ${activeTab === "health" ? "active" : ""}`}
-            onClick={() => setActiveTab("health")}
-          >
-            <FaHeartbeat /> Health Info
-          </button>
-          <button
-            className={`tab-btn ${activeTab === "appointments" ? "active" : ""}`}
-            onClick={() => setActiveTab("appointments")}
-          >
+          <button className="tab-btn active" onClick={fetchAppointments}>
             <FaHistory /> Past Appointments
           </button>
         </div>
 
         <div className="sidebar-content">
-          {activeTab === "health" && (
-            <div>
-              <h4>Health Info</h4>
-              <p><strong>Age:</strong> {user.age || "Not provided"}</p>
-              <p><strong>Gender:</strong> {user.gender || "Not provided"}</p>
-              <p><strong>Blood Group:</strong> {user.bloodGroup || "Not provided"}</p>
+          {appointments.length > 0 ? (
+            <div className="appointments-list">
+              {appointments.map((appt, index) => (
+                <div key={index} className="appointment-item">
+                  <p><strong>Doctor:</strong> {appt.doctor?.name || appt.doctorName || "Unknown"}</p>
+                  <p><strong>Date:</strong> {new Date(appt.date).toLocaleDateString()}</p>
+                  <p><strong>Time:</strong> {appt.time || "N/A"}</p>
+                  <p><strong>Status:</strong> {appt.status}</p>
+                  {appt.status === "Completed" && (
+                    <button
+                      className="btn-feedback"
+                      disabled={appt.feedbackGiven}
+                      onClick={() => navigate(`/feedback/${appt._id}`, { state: { appointment: appt } })}
+                    >
+                      Give Feedback
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
-          )}
-          {activeTab === "appointments" && (
-            <div>
-              <button onClick={()=>{
-                navigate('/PastAppointments')
-              }}>Past Appointments</button>
-            </div>
+          ) : (
+            <p style={{ padding: "10px" }}>No past appointments found.</p>
           )}
         </div>
       </div>
@@ -113,23 +141,60 @@ export default function Dashboard() {
 
       {/* Features Section */}
       <section className="features">
-        <button className="btn-blue" onClick={() => navigate("/PastAppointments")}>Booked Appointments</button>
+        <button className="btn-blue" onClick={() => navigate("/viewAppointments")}>Booked Appointments</button>
         <button className="btn-yellow" onClick={() => navigate("/symptom")}>Symptom Checker</button>
       </section>
 
       {/* Doctors Section */}
-      <section className="doctors">
-        <h2>Top Doctors to Book</h2>
-        <div className="doctor-list">
-          {[1, 2, 3, 4].map((id) => (
-            <div key={id} className="doctor-card">
-              <img src="/images/doctors/doctor-card1.png" alt={`Doctor ${id}`} />
-              <h3>Dr. Richard Jones</h3>
-              <p>Specialist</p>
+<section className="doctors">
+  <h2 className="section-title">Top Rated Doctors</h2>
+  <p className="section-subtitle">
+    Meet our most trusted and highly rated specialists ready to assist you.
+  </p>
+
+  <div className="doctor-grid">
+    {topDoctors.length > 0 ? (
+      topDoctors.map((doctor, index) => (
+        <div key={index} className="doctor-card">
+          <div className="doctor-image-wrapper">
+            <img
+              src={doctor.profileImage || "/images/doctors/doctor-card1.png"}
+              alt={doctor.name || "Doctor"}
+              className="doctor-image"
+            />
+            <div className="rating-badge">
+              <FaStar className="star-icon" /> {doctor.rating?.toFixed(1) || "N/A"}
             </div>
-          ))}
+          </div>
+
+          <div className="doctor-info">
+            <h3 className="doctor-name">{doctor.name}</h3>
+            <p className="doctor-specialization">{doctor.specialization}</p>
+            <p className="doctor-clinic"><strong>Clinic:</strong> {doctor.clinicName}</p>
+            <p className="doctor-location">
+              {doctor.address?.city}, {doctor.address?.state}
+            </p>
+            <p className="doctor-experience">
+              <strong>Experience:</strong> {doctor.experience} years
+            </p>
+            <p className="doctor-rate">
+              <strong>Consultation Fee:</strong> ₹{doctor.rate}
+            </p>
+          </div>
+
+          <button
+            className="book-btn"
+            onClick={() => navigate("/appointment", { state: { doctor } })}
+          >
+            Book Appointment
+          </button>
         </div>
-      </section>
+      ))
+    ) : (
+      <p>Loading top doctors...</p>
+    )}
+  </div>
+</section>
 
       {/* Ask Curo Section */}
       <section className="ask-curo">

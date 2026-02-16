@@ -14,6 +14,11 @@ export default function Appointment() {
   const [error, setError] = useState("");
 
   const handleSearch = async () => {
+    if (!date) {
+      alert("Please select a date");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -21,18 +26,13 @@ export default function Appointment() {
       const queryParams = new URLSearchParams();
       if (speciality) queryParams.append("specialization", speciality);
       if (location) queryParams.append("city", location);
-      if (date) queryParams.append("date", date); 
+      queryParams.append("date", date); 
 
       const res = await axios.get(
         `${backendUrl}/userProfile/get-doctors?${queryParams.toString()}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
 
-      console.log(res);
       setResults(res.data.data.docList);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch doctors");
@@ -52,12 +52,10 @@ export default function Appointment() {
           onChange={(e) => setSpeciality(e.target.value)}
         >
           <option value="">Select Speciality</option>
-          <option>General Consultation</option>
-          <option>Treatment of Illness</option>
-          <option>Basic First Aid</option>
-          <option>Prescription and Medication Guidance</option>
-          <option>Preventive Care</option>
-          <option>Chronic Condition Support</option>
+          <option value="Dentist">Dentist</option>
+          <option value="Dermatology">Dermatology</option>
+          <option value="Pediatrics">Pediatrics</option>
+          <option value="General Practitioner">General Practitioner</option>
         </select>
 
         <input
@@ -65,6 +63,7 @@ export default function Appointment() {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           min={new Date().toISOString().split("T")[0]}
+          required
         />
 
         <select value={location} onChange={(e) => setLocation(e.target.value)}>
@@ -83,19 +82,15 @@ export default function Appointment() {
       {error && <p className="error">{error}</p>}
 
       <div className="doctor-results">
-        {
-        results.length > 0 ? (
+        {results.length > 0 ? (
           results.map((doc) => (
             <div key={doc._id} className="doctor-card">
               <div className="doctor-image">
-                <img
-                  src={doc.profileImage }
-                  alt={doc.email}
-                />
+                <img src={doc.profileImage} alt={doc.email} />
               </div>
 
               <div className="doctor-info">
-                <h3 className="doctor-header">{doc.email}</h3>
+                <h3 className="doctor-header">{doc.name}</h3>
                 <p>
                   <strong>Speciality:</strong> {doc.specialization || "N/A"}
                 </p>
@@ -113,11 +108,9 @@ export default function Appointment() {
               <div className="doctor-footer">
                 <button
                   className="btn-view"
-                  onClick={() => {
-                    const doctorId = doc._id;
-                    const clinicId = doc.clinic;
-                    navigate(`/BookingPanel/${doc._id}`);
-                  }}
+                  onClick={() =>
+                    navigate(`/BookingPanel/${doc._id}`, { state: { date } })
+                  }
                 >
                   View
                 </button>
@@ -127,9 +120,7 @@ export default function Appointment() {
         ) : (
           !loading &&
           !error && (
-            <p className="no-results">
-              No doctors found. Try adjusting filters.
-            </p>
+            <p className="no-results">No doctors found. Try adjusting filters.</p>
           )
         )}
       </div>

@@ -25,50 +25,62 @@ export default function ViewBookedAppointments() {
     fetchAppointments();
   }, []);
 
-  if (loading) return <div className="appointments-loading">Loading...</div>;
+  if (loading) return <div className="appointments-loading">Loading appointments...</div>;
   if (error) return <div className="appointments-error">{error}</div>;
 
   return (
     <div className="appointments-container">
-      <h2>My Booked Appointments</h2>
+      <h2 className="appointments-title">My Booked Appointments</h2>
       {appointments.length === 0 ? (
-        <p>No appointments booked.</p>
+        <p className="no-appointments">No appointments booked.</p>
       ) : (
-        <ul className="appointments-list">
+        <div className="appointments-grid">
           {appointments.map((appt) => (
-            <li
-              key={appt._id}
-              className={`appointment-card ${appt.isPresent ? "live-appointment" : ""}`}
-            >
-              <div className="appointment-section">
-                <h3>Doctor Info</h3>
-                <p><strong>Name:</strong> {appt.doctor?.name || "N/A"}</p>
-                <p><strong>Specialization:</strong> {appt.doctor?.specialization?.join(", ") || "N/A"}</p>
-                <p><strong>Rate:</strong> {appt.doctor?.rate ? `₹${appt.doctor.rate}` : "N/A"}</p>
-                {appt.doctor?.profileImage && <img src={appt.doctor.profileImage} alt="Doctor" className="doctor-image" />}
+            <div key={appt._id} className="appointment-card">
+              <div className="doctor-section">
+                <div className="doctor-info">
+                  <img
+                    src={appt.doctor?.profileImage || "/default-doctor.png"}
+                    alt="Doctor"
+                    className="doctor-image"
+                  />
+                  <div>
+                    <h3>{appt.doctor?.name || "Unknown Doctor"}</h3>
+                    <p className="specialization">{appt.doctor?.specialization || "N/A"}</p>
+                    <p className="rate">
+                      {appt.doctor?.rate ? `₹${appt.doctor.rate}` : "Rate not available"}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="appointment-section">
-                <h3>Clinic Info</h3>
-                <p><strong>Name:</strong> {appt.clinic?.name || "N/A"}</p>
-                <p><strong>Email:</strong> {appt.clinic?.email || "N/A"}</p>
-                <p><strong>Mobile:</strong> {appt.clinic?.mobileNo || "N/A"}</p>
-                <p><strong>Address:</strong> {appt.clinic?.address?.line1}, {appt.clinic?.address?.city}, {appt.clinic?.address?.country}</p>
-                {appt.clinic?.logo && <img src={appt.clinic.logo} alt="Clinic Logo" className="clinic-logo" />}
+              <div className="clinic-section">
+                <h4>Clinic Information</h4>
+                <p><strong>Name:</strong> {appt.doctor?.clinicName || "N/A"}</p>
+                <p><strong>Address:</strong> {`${appt.doctor?.address?.line1 || ""}, ${appt.doctor?.address?.city || ""}, ${appt.doctor?.address?.state || ""}`}</p>
               </div>
 
-              <div className="appointment-section">
-                <h3>Appointment Details</h3>
+              <div className="details-section">
+                <h4>Appointment Details</h4>
                 <p><strong>Date:</strong> {new Date(appt.date).toLocaleDateString()}</p>
-                <p><strong>Status:</strong> {appt.status}</p>
+                <p><strong>Time:</strong> {appt.time || "N/A"}</p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={`status-text ${
+                      appt.partOfQueue.status === "Stopped"
+                        ? "status-stopped"
+                        : "status-active"
+                    }`}
+                  >
+                    {appt.partOfQueue.status}
+                  </span>
+                </p>
                 <p><strong>Coupon Number:</strong> {appt.couponNumber}</p>
-                <p><strong>Live:</strong> {appt.isPresent ? "Yes" : "No"}</p>
-                <p><strong>Queue Status:</strong> {appt.partOfQueue?.status || "N/A"}</p>
-                <p><strong>Current Token:</strong> {appt.partOfQueue?.currentToken || 0}</p>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
