@@ -1,0 +1,108 @@
+/* Full screen center layout */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #eef2ff, #f8fafc);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Card */
+.auth-form {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Heading */
+.auth-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+/* Inputs + select */
+.auth-input,
+.auth-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 15px;
+  transition: all 0.25s ease;
+  background: #fff;
+}
+
+.auth-input:focus,
+.auth-select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* Error text */
+.auth-error {
+  color: #ef4444;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Button */
+.auth-button {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.auth-button:hover {
+  background: #4338ca;
+  transform: translateY(-1px);
+}
+
+.auth-button:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Signup text */
+.signup-text {
+  text-align: center;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* Signup link */
+.signup-link {
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+}
+
+/* Disabled signup */
+.signup-link.disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
+}
