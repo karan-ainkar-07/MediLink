@@ -6,6 +6,8 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Feedback } from "../models/feedback.model.js";
+import { SYMPTOM_CHECKER_API } from "../Constants.js";
+import axios from "axios";
 
 //Add, View, Edit Health Details
 
@@ -385,8 +387,21 @@ doctor.rating = ((doctor.rating * doctor.totalFeedback) + overall) / (doctor.tot
       );
     })
 
+
+    // call fastAPI for predicting disease 
+    const predict =asyncHandler( async (req,res)=>{
+      const {description} = req.body;
+      const prediction = await axios.post(SYMPTOM_CHECKER_API,{
+        data :description,
+      })
+      res.status(200).json(
+        new ApiResponse(200,prediction.data)
+      )
+    })
+
 export  {
     getDoctors,
+    predict,
     getCouponStats,
     BookAppointment,
     getDoctor,

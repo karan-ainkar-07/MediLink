@@ -9,6 +9,7 @@ import {
     viewAppointments,
     createUserInfo,
     updateUserInfo,
+    predict,
     getUserInfo,
     giveFeedback,
     pastAppointments} from "../controllers/userProfile.controller.js";
@@ -26,4 +27,5 @@ router.route('/update-user-info').patch(verifyJWT("User"), updateUserInfo);
 router.route('/get-user-info').get(verifyJWT("User"), getUserInfo);
 router.route('/give-feedback').post(verifyJWT("User"), giveFeedback);
 router.route('/view-past-appointments').get(verifyJWT("User"),pastAppointments);
+router.route('/predict').post(predict);
 export default router;
