@@ -201,7 +201,7 @@ export default function Dashboard() {
         <div className="ask-content">
           <h2>Ask anything about your health.</h2>
           <p>Get trusted answers directly from our doctors.</p>
-          <button className="btn-primary">Ask Curo</button>
+          <button  onClick={() => navigate("/symptom")} className="btn-primary">Ask Curo</button>
         </div>
         <img src="/images/ask-curo/ask-doctor.png" alt="Doctor" />
       </section>

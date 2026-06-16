@@ -8,8 +8,8 @@ from sklearn.svm import SVC
 from sklearn.metrics import classification_report, accuracy_score
 
 #load the embeddings and labels
-X = np.load("embeddings.npy")
-labels=np.load("labels.npy")
+X = np.load("embeddings2.npy")
+labels=np.load("labels2.npy")
 
 
 # NORMALIZATION

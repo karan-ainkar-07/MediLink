@@ -357,8 +357,7 @@ import axios from "axios";
       const doctor=await Doctor.findOne({_id:doctorId})
       if(doctor.totalFeedback!=0)
       {
-doctor.rating = ((doctor.rating * doctor.totalFeedback) + overall) / (doctor.totalFeedback + 1);
-
+        doctor.rating = ((doctor.rating * doctor.totalFeedback) + overall) / (doctor.totalFeedback + 1);
       }
       else
       {
@@ -386,22 +385,10 @@ doctor.rating = ((doctor.rating * doctor.totalFeedback) + overall) / (doctor.tot
         new ApiResponse(200,doctorId)
       );
     })
-
-
-    // call fastAPI for predicting disease 
-    const predict =asyncHandler( async (req,res)=>{
-      const {description} = req.body;
-      const prediction = await axios.post(SYMPTOM_CHECKER_API,{
-        data :description,
-      })
-      res.status(200).json(
-        new ApiResponse(200,prediction.data)
-      )
-    })
+    
 
 export  {
     getDoctors,
-    predict,
     getCouponStats,
     BookAppointment,
     getDoctor,
